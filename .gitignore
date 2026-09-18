@@ -1,0 +1,19 @@
+# Python
+backend/.venv/
+backend/__pycache__/
+backend/**/*.py[cod]
+backend/.pytest_cache/
+backend/.pytest-tmp/
+backend/devlens.db
+
+# Node / Expo
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/coverage/
+mobile/.npm-cache/
+
+# Environment and editor files
+.env
+*.log
+.DS_Store

@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "DevLens",
+    "slug": "devlens",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "devlens",
+    "experiments": { "typedRoutes": true },
+    "plugins": ["expo-router"],
+    "android": { "package": "com.devlens.mobile" }
+  }
+}
+
