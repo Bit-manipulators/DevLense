@@ -74,3 +74,16 @@ export interface HealthResponse {
   environment: string;
   execution_sandbox_available: boolean;
 }
+
+export interface OcrRequest {
+  image_base64: string;
+  hint_language?: Language;
+}
+
+export interface OcrResponse {
+  code: string;
+  detected_language: Language;
+  confidence: number;
+  provider: string;
+  error_message?: string;
+}

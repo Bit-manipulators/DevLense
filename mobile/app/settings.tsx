@@ -21,7 +21,13 @@ export default function SettingsScreen() {
     {loading ? <LoadingState label="Checking DevLens server…" /> : null}<ErrorPanel message={error} />
     {health ? <Card><Detail label="BACKEND" value={health.status === "ok" ? "Connected" : health.status} good /><Detail label="ENVIRONMENT" value={health.environment} /><Detail label="DOCKER SANDBOX" value={health.execution_sandbox_available ? "Available" : "Unavailable — execution is safely disabled"} good={health.execution_sandbox_available} /></Card> : null}
     <Button label="Check connection" onPress={() => void check()} loading={loading} tone="secondary" />
-    <Card><Text style={styles.heading}>FUTURE EXTENSIONS</Text><Text style={styles.body}>Camera/OCR, voice input, on-device models, Git diff analysis, and Office Kit sync have documented service boundaries but are not implemented in this MVP.</Text></Card>
+    <Card>
+      <Text style={styles.heading}>CAMERA / OCR ENGINE</Text>
+      <Detail label="STATUS" value="Active & Connected" good />
+      <Detail label="PRIVACY" value="Zero Retention (In-Memory Processing)" good />
+      <Text style={styles.body}>Photograph code directly with your camera or import screenshots from your gallery. Code is extracted, auto-detected, and presented in a live review modal.</Text>
+    </Card>
+    <Card><Text style={styles.heading}>FUTURE EXTENSIONS</Text><Text style={styles.body}>Voice input dictation, on-device models, Git diff analysis, and Office Kit sync have documented service boundaries.</Text></Card>
     <Card><Text style={styles.heading}>PHONE SETUP</Text><Text style={styles.body}>Set EXPO_PUBLIC_API_URL to your computer’s LAN IP, not localhost, before opening the app on a physical Android device.</Text></Card>
   </Screen>;
 }

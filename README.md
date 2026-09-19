@@ -219,6 +219,7 @@ DevLens enforces a **Zero Host-Code Execution** policy. Untrusted code submitted
 | :---: | :--- | :--- | :---: |
 | `POST` | `/api/v1/analyze` | Parse source code, detect bugs, and generate corrected solution | `201 Created` |
 | `POST` | `/api/v1/execute` | Execute validated code in the secure Docker container | `200 OK` / `503` |
+| `POST` | `/api/v1/ocr` | Extract source code and detect language from camera photo or screenshot | `200 OK` |
 | `GET` | `/api/v1/sessions` | Fetch paginated debugging sessions (`?limit=50&offset=0`) | `200 OK` |
 | `GET` | `/api/v1/sessions/{id}` | Retrieve comprehensive session details, diffs, and executions | `200 OK` |
 | `DELETE` | `/api/v1/sessions/{id}` | Permanently remove a session and associated execution logs | `204 No Content` |
@@ -241,7 +242,7 @@ npm test
 npm run typecheck
 ```
 
-All 10 backend tests and 5 frontend test suites pass with zero warnings.
+All 14 backend tests and 3 frontend test suites (10 unit tests) pass with zero warnings.
 
 ---
 
@@ -251,10 +252,11 @@ All 10 backend tests and 5 frontend test suites pass with zero warnings.
 - [x] Zero-trust Docker execution sandbox with auto-orphan cleanup
 - [x] $N+1$ query optimization via `selectinload` & paginated sessions API
 - [x] Safe HTTP 204 mobile deletion & web browser extension error interception
+- [x] Camera & Gallery OCR code scanner with confidence review modal
 - [ ] Multi-tenant authentication (JWT / OAuth2) & PostgreSQL storage
 - [ ] Distributed runner worker fleet via Redis / Celery
 - [ ] Tree-sitter AST parser integration for advanced multi-language analysis
-- [ ] Camera OCR code scanner & voice dictation integration
+- [ ] Voice dictation integration
 
 ---
 

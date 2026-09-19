@@ -1,14 +1,16 @@
-# Future capabilities
+# Implemented & Future capabilities
 
-## Camera / OCR
+## Camera / OCR (Implemented)
 
-The mobile client exposes a `CameraCodeCaptureService` interface but intentionally provides no fake implementation. A real provider should follow:
+The mobile client and backend provide complete Camera & OCR code capture via:
 
 ```text
-Camera permission → image capture → OCR → code extraction → language detection → editor → analyzer
+Camera permission → image capture (expo-image-picker) → POST /api/v1/ocr (OcrService) → code extraction & language detection → CameraScanModal review → CodeEditor → analyzer
 ```
 
-It needs consent, on-device image handling policy, OCR confidence display, and a user-editable review before analysis.
+- **Zero-retention privacy:** Captured images are processed in-memory and never written to disk or the database.
+- **Confidence meter:** Computes OCR recognition confidence and highlights warnings if review is needed.
+- **Editable review:** Developers can inspect the scanned code, fix OCR character ambiguities, and confirm the detected language before inserting into the editor.
 
 ## Voice input
 

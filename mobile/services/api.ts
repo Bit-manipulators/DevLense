@@ -5,6 +5,8 @@ import {
   ExecuteRequest,
   ExecuteResponse,
   HealthResponse,
+  OcrRequest,
+  OcrResponse,
   SessionListItem
 } from "@/types/api";
 
@@ -64,3 +66,6 @@ export const deleteSession = async (id: string): Promise<void> => {
   await request<undefined>(`/api/v1/sessions/${id}`, { method: "DELETE" });
 };
 export const healthCheck = () => request<HealthResponse>("/api/v1/health");
+
+export const extractCodeFromImage = (payload: OcrRequest) =>
+  request<OcrResponse>("/api/v1/ocr", { method: "POST", body: JSON.stringify(payload) });
