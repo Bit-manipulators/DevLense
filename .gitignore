@@ -12,6 +12,8 @@ mobile/.expo/
 mobile/dist/
 mobile/coverage/
 mobile/.npm-cache/
+mobile/android/
+mobile/ios/
 
 # Environment and editor files
 .env

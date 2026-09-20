@@ -10,9 +10,18 @@ import {
   SessionListItem
 } from "@/types/api";
 
-// The development API uses 8001 to avoid common collisions with other local
-// Uvicorn projects. Physical devices must set EXPO_PUBLIC_API_URL to the host's LAN IP.
-const API_URL = (process.env.EXPO_PUBLIC_API_URL || "http://127.0.0.1:8001").replace(/\/$/, "");
+// Dynamically resolve API URL: automatically matches the browser's hostname
+// (e.g. LAN IP 10.140.36.194 or localhost) so requests succeed on any phone or PC.
+export function getApiUrl(): string {
+  if (typeof window !== "undefined" && window.location?.hostname) {
+    if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+      return `http://${window.location.hostname}:8001`;
+    }
+  }
+  return (process.env.EXPO_PUBLIC_API_URL || "http://127.0.0.1:8001").replace(/\/$/, "");
+}
+
+const API_URL = getApiUrl();
 
 export class DevLensApiError extends Error {
   constructor(message: string, public readonly status?: number) {
