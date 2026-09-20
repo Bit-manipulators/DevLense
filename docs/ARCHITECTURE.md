@@ -10,9 +10,11 @@ flowchart TB
   AS --> RB["RuleBasedAnalyzer"]
   AS -. provider configured .-> OL["OllamaAnalyzer"]
   REST --> OCR["OcrService (Tesseract / Ollama Vision / Fallback)"]
+  REST --> AG["AgentService (Ollama / Heuristic Copilot)"]
   REST --> SS["SessionService"] --> DB[("SQLite")]
   REST --> ES["DockerExecutionService"] --> DC["Docker constrained container"]
   UI --> CAM["CameraCodeCaptureService"] --> API
+  UI --> COPILOT["AgentCopilot Component"] --> API
   UI -. future interface .-> VOICE["VoiceInputService"]
 ```
 

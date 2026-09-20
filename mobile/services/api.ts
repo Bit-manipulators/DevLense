@@ -1,4 +1,6 @@
 import {
+  AgentChatRequest,
+  AgentChatResponse,
   AnalyzeRequest,
   AnalysisResponse,
   DebugSession,
@@ -78,3 +80,6 @@ export const healthCheck = () => request<HealthResponse>("/api/v1/health");
 
 export const extractCodeFromImage = (payload: OcrRequest) =>
   request<OcrResponse>("/api/v1/ocr", { method: "POST", body: JSON.stringify(payload) });
+
+export const sendAgentChatMessage = (payload: AgentChatRequest) =>
+  request<AgentChatResponse>("/api/v1/agent/chat", { method: "POST", body: JSON.stringify(payload) });

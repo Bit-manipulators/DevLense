@@ -87,3 +87,25 @@ export interface OcrResponse {
   provider: string;
   error_message?: string;
 }
+
+export interface ChatMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+}
+
+export interface AgentChatRequest {
+  session_id?: string;
+  code: string;
+  language: Language;
+  error_message?: string;
+  question?: string;
+  finding_summary?: string;
+  user_message: string;
+  history?: ChatMessage[];
+}
+
+export interface AgentChatResponse {
+  reply: string;
+  code_snippet?: string;
+  model: string;
+}

@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
+import { AgentCopilot } from "@/components/AgentCopilot";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { ErrorPanel } from "@/components/ErrorPanel";
@@ -33,6 +34,16 @@ export default function AnalysisScreen() {
   const applyFix = () => { updateDraft({ language: session.language, code: session.corrected_code, errorMessage: session.error_message, question: session.question }); router.replace("/new-session"); };
   const runFix = () => { updateDraft({ language: session.language, code: session.corrected_code, errorMessage: session.error_message, question: session.question }); router.push({ pathname: "/execution", params: { autoRun: "true", sessionId: session.id } }); };
 
+  const handleApplyCopilotCode = (newCode: string) => {
+    updateDraft({ language: session.language, code: newCode, errorMessage: session.error_message, question: session.question });
+    router.push("/new-session");
+  };
+
+  const handleTestCopilotCode = (newCode: string) => {
+    updateDraft({ language: session.language, code: newCode, errorMessage: session.error_message, question: session.question });
+    router.push({ pathname: "/execution", params: { autoRun: "true", sessionId: session.id } });
+  };
+
   return <Screen>
     <View style={styles.top}><Text style={styles.eyebrow}>ANALYSIS COMPLETE</Text><SeverityBadge severity={session.severity} /></View>
     <Text style={styles.title}>{session.summary}</Text>
@@ -40,6 +51,17 @@ export default function AnalysisScreen() {
     <Card><FixPanel fix={session.suggested_fix} code={session.corrected_code} /></Card>
     <Card><Text style={styles.sectionTitle}>DEBUGGING STEPS</Text>{session.debugging_steps.map((step, index) => <Text key={step} style={styles.step}>{index + 1}. {step}</Text>)}</Card>
     <Button label="Apply Suggested Fix" onPress={applyFix} /><Button label="Run Fixed Code" onPress={runFix} tone="secondary" /><Button label="Copy Fix" onPress={() => void Clipboard.setStringAsync(session.corrected_code)} tone="secondary" /><Button label="New Analysis" onPress={() => router.replace("/new-session")} tone="secondary" />
+    
+    <AgentCopilot
+      code={session.code}
+      language={session.language}
+      errorMessage={session.error_message}
+      question={session.question}
+      findingSummary={session.summary}
+      sessionId={session.id}
+      onApplyCode={handleApplyCopilotCode}
+      onTestCode={handleTestCopilotCode}
+    />
   </Screen>;
 }
 

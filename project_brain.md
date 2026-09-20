@@ -273,6 +273,7 @@ All endpoints are versioned under `/api/v1` and served on port **`8001`**.
 | `POST` | `/api/v1/analyze` | Analyzes code for faults and persists session | `AnalyzeRequest` | `201 Created`, `400`, `422` |
 | `POST` | `/api/v1/execute` | Compiles & executes code in Docker container | `ExecuteRequest` | `200 OK`, `503` *(Docker off)* |
 | `POST` | `/api/v1/ocr` | Extracts code from base64 image & detects language | `OcrRequest` | `200 OK`, `400`, `422` |
+| `POST` | `/api/v1/agent/chat` | Chat with DevLens Copilot (Ollama LLM / Heuristic) | `AgentChatRequest` | `200 OK`, `400`, `422` |
 | `GET` | `/api/v1/sessions` | Retrieves paginated debug sessions | `?limit=50&offset=0` | `200 OK` |
 | `GET` | `/api/v1/sessions/{id}` | Retrieves full session, diff, and execution history | None | `200 OK`, `404` |
 | `DELETE`| `/api/v1/sessions/{id}` | Permanently deletes a debug session and linked executions | None | `204 No Content`, `404` |
