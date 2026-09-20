@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
+import { Feather } from "@expo/vector-icons";
 
 import { Button } from "@/components/Button";
 import { CameraScanModal } from "@/components/CameraScanModal";
@@ -90,8 +91,24 @@ export default function NewDebugSession() {
           </View>
         ) : (
           <>
-            <Text onPress={handleScanCamera} style={styles.scanBtn} accessibilityRole="button">📷 Scan</Text>
-            <Text onPress={handleScanGallery} style={styles.scanBtn} accessibilityRole="button">🖼️ Import</Text>
+            <Pressable
+              onPress={handleScanCamera}
+              style={({ pressed }) => [styles.actionPill, pressed && styles.actionPillPressed]}
+              accessibilityRole="button"
+              accessibilityLabel="Scan code with camera"
+            >
+              <Feather name="camera" size={13} color={colors.primary} />
+              <Text style={styles.actionPillText}>Camera</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleScanGallery}
+              style={({ pressed }) => [styles.actionPill, pressed && styles.actionPillPressed]}
+              accessibilityRole="button"
+              accessibilityLabel="Upload code image from gallery"
+            >
+              <Feather name="upload" size={13} color={colors.primary} />
+              <Text style={styles.actionPillText}>Upload</Text>
+            </Pressable>
           </>
         )}
         <Text onPress={() => updateDraft({ code: "" })} style={styles.clear}>Clear</Text>
@@ -130,11 +147,30 @@ const styles = StyleSheet.create({
   label: { color: colors.muted, fontSize: 11, fontWeight: "900", letterSpacing: 0.9 },
   optional: { color: colors.muted, fontWeight: "500" },
   headingRow: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
-  scanActions: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  scanBtn: { color: colors.primary, fontSize: 13, fontWeight: "800", paddingHorizontal: 4, paddingVertical: 2 },
+  scanActions: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+  actionPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: colors.surfaceRaised,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  actionPillPressed: {
+    opacity: 0.7,
+    borderColor: colors.primary,
+  },
+  actionPillText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "700",
+  },
   scanningIndicator: { flexDirection: "row", alignItems: "center", gap: 6 },
   scanningText: { color: colors.primary, fontSize: 12, fontWeight: "700" },
-  clear: { color: colors.muted, fontSize: 13, fontWeight: "800" },
+  clear: { color: colors.muted, fontSize: 13, fontWeight: "800", marginLeft: 4 },
   textArea: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 12, borderWidth: 1, color: colors.text, minHeight: 112, padding: spacing.md, fontFamily: "monospace", fontSize: 13 },
   question: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 12, borderWidth: 1, color: colors.text, minHeight: 84, padding: spacing.md },
   buttons: { gap: spacing.sm },
@@ -142,3 +178,4 @@ const styles = StyleSheet.create({
   demoTitle: { color: colors.text, flex: 1, fontWeight: "800" },
   reset: { color: colors.muted, fontSize: 13, fontWeight: "700", textAlign: "center" }
 });
+

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 
 import { Button } from "@/components/Button";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -51,7 +52,12 @@ export function CameraScanModal({
                 <Text style={styles.title}>Scanned Code Review</Text>
               </View>
               <View style={[styles.confidenceBadge, isHighConfidence ? styles.confHigh : styles.confLow]}>
-                <Text style={styles.confidenceText}>
+                <Feather
+                  name={isHighConfidence ? "check-circle" : "alert-circle"}
+                  size={12}
+                  color={isHighConfidence ? "#4ade80" : "#facc15"}
+                />
+                <Text style={[styles.confidenceText, { color: isHighConfidence ? "#4ade80" : "#facc15" }]}>
                   {confidencePercent}% {isHighConfidence ? "Confidence" : "Review needed"}
                 </Text>
               </View>
@@ -82,8 +88,9 @@ export function CameraScanModal({
             />
 
             <View style={styles.privacyNote}>
+              <Feather name="shield" size={13} color={colors.primary} />
               <Text style={styles.privacyText}>
-                🛡️ Zero retention: Captured photo is processed in-memory and never saved to the server.
+                Zero retention: Captured photo is processed in-memory and never saved to the server.
               </Text>
             </View>
 
@@ -152,6 +159,9 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   confidenceBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -213,11 +223,17 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   privacyNote: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     backgroundColor: colors.surfaceRaised,
+    borderColor: colors.border,
+    borderWidth: 1,
     borderRadius: 8,
     padding: spacing.sm,
   },
   privacyText: {
+    flex: 1,
     color: colors.muted,
     fontSize: 11,
     lineHeight: 16,
