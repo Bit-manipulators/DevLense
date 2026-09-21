@@ -51,7 +51,7 @@ if (Platform.OS === "web" && typeof window !== "undefined") {
 
 // Global error handling for React Native native runtime
 if (Platform.OS !== "web") {
-  const globalAny = global as any;
+  const globalAny = globalThis as any;
   if (globalAny.ErrorUtils) {
     const originalHandler = globalAny.ErrorUtils.getGlobalHandler?.();
     globalAny.ErrorUtils.setGlobalHandler((error: any, isFatal?: boolean) => {
