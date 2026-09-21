@@ -1,5 +1,14 @@
-from app.execution.base import ExecutionService, ExecutionUnavailable
+from app.execution.base import ExecutionOutput, ExecutionService, ExecutionUnavailable
 from app.execution.docker import DockerExecutionService
+from app.execution.hybrid import HybridExecutionService
+from app.execution.process import ProcessExecutionService
 
-__all__ = ["ExecutionService", "ExecutionUnavailable", "DockerExecutionService"]
+__all__ = [
+    "ExecutionOutput",
+    "ExecutionService",
+    "ExecutionUnavailable",
+    "DockerExecutionService",
+    "ProcessExecutionService",
+    "HybridExecutionService",
+]
 

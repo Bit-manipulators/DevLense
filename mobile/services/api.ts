@@ -12,17 +12,36 @@ import {
   SessionListItem
 } from "@/types/api";
 
+export const DEFAULT_CLOUD_API_URL = "https://devlense.onrender.com";
+
 let customApiUrl: string | null = null;
+type ApiUrlListener = (url: string) => void;
+const listeners: Set<ApiUrlListener> = new Set();
+
+export function subscribeApiUrl(listener: ApiUrlListener): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
 
 export function setCustomApiUrl(url: string | null): void {
   customApiUrl = url ? url.trim().replace(/\/$/, "") : null;
+  const current = getApiUrl();
+  listeners.forEach((listener) => {
+    try {
+      listener(current);
+    } catch {
+      // ignore
+    }
+  });
 }
 
 export function getCustomApiUrl(): string | null {
   return customApiUrl;
 }
 
-// Dynamically resolve API URL: supports custom URL, browser hostname, or env variable
+// Dynamically resolve API URL: supports custom URL, browser hostname, env variable, or Render Cloud default
 export function getApiUrl(): string {
   if (customApiUrl) {
     return customApiUrl;
@@ -32,7 +51,7 @@ export function getApiUrl(): string {
       return `http://${window.location.hostname}:8001`;
     }
   }
-  return (process.env.EXPO_PUBLIC_API_URL || "http://127.0.0.1:8001").replace(/\/$/, "");
+  return (process.env.EXPO_PUBLIC_API_URL || DEFAULT_CLOUD_API_URL).replace(/\/$/, "");
 }
 
 export async function testApiUrl(candidateUrl: string): Promise<HealthResponse> {

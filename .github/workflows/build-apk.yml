@@ -75,6 +75,8 @@ jobs:
     name: Build Standalone Android APK
     needs: [test-and-lint]
     runs-on: ubuntu-latest
+    env:
+      EXPO_PUBLIC_API_URL: "https://devlense.onrender.com"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4

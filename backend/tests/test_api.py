@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 
 def test_health_endpoint(client):
     response = client.get("/api/v1/health")
@@ -114,3 +116,15 @@ def test_sessions_pagination(client):
     ids_first = {item["id"] for item in first_page.json()}
     ids_second = {item["id"] for item in second_page.json()}
     assert ids_first.isdisjoint(ids_second)
+
+
+@pytest.mark.asyncio
+async def test_process_execution_python():
+    from app.config import get_settings
+    from app.execution.process import ProcessExecutionService
+
+    service = ProcessExecutionService(get_settings())
+    assert service.is_available() is True
+    result = await service.execute("python", "print('hello from test')")
+    assert result.success is True
+    assert "hello from test" in result.stdout

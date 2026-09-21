@@ -4,11 +4,20 @@ import Dashboard from "@/app/index";
 import { DebugDraftProvider } from "@/hooks/useDebugDraft";
 
 const mockPush = jest.fn();
-jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }));
+jest.mock("expo-router", () => {
+  const React = require("react");
+  return {
+    useRouter: () => ({ push: mockPush }),
+    useFocusEffect: (callback: () => void) => {
+      React.useEffect(callback, [callback]);
+    },
+  };
+});
 jest.mock("@expo/vector-icons", () => ({ Feather: "Feather" }));
 jest.mock("@/services/api", () => ({
   getSessions: jest.fn().mockResolvedValue([]),
-  getApiUrl: jest.fn().mockReturnValue("http://10.140.36.194:8001"),
+  getApiUrl: jest.fn().mockReturnValue("https://devlense.onrender.com"),
+  subscribeApiUrl: jest.fn().mockReturnValue(() => {}),
 }));
 
 describe("Dashboard", () => {

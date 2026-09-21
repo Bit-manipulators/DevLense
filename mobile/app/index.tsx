@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 
 import { Button } from "@/components/Button";
@@ -10,7 +10,7 @@ import { LoadingState } from "@/components/LoadingState";
 import { Screen } from "@/components/Screen";
 import { SessionCard } from "@/components/SessionCard";
 import { colors, spacing } from "@/constants/theme";
-import { getApiUrl, getSessions } from "@/services/api";
+import { getApiUrl, getSessions, subscribeApiUrl } from "@/services/api";
 import { SessionListItem } from "@/types/api";
 
 export default function Dashboard() {
@@ -18,12 +18,36 @@ export default function Dashboard() {
   const [sessions, setSessions] = useState<SessionListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUrl, setCurrentUrl] = useState(getApiUrl());
 
   const load = useCallback(async () => {
-    setLoading(true); setError(null);
-    try { setSessions(await getSessions()); } catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to load history."); } finally { setLoading(false); }
+    setLoading(true);
+    setError(null);
+    setCurrentUrl(getApiUrl());
+    try {
+      setSessions(await getSessions());
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to load history.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
-  useEffect(() => { void load(); }, [load]);
+
+  // Reload sessions every time the dashboard comes into focus (e.g. returning from Settings)
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load])
+  );
+
+  // Subscribe to instant URL changes from Settings
+  useEffect(() => {
+    const unsubscribe = subscribeApiUrl((newUrl) => {
+      setCurrentUrl(newUrl);
+      void load();
+    });
+    return unsubscribe;
+  }, [load]);
 
   const safeSessions = Array.isArray(sessions) ? sessions : [];
 
@@ -52,7 +76,7 @@ export default function Dashboard() {
     >
       <View style={[styles.statusDot, { backgroundColor: error ? colors.danger : colors.success }]} />
       <Text style={styles.serverBadgeText} numberOfLines={1}>
-        {error ? "Backend Unreachable • Tap to configure" : `Server: ${getApiUrl()}`}
+        {error ? "Backend Unreachable • Tap to configure" : `Server: ${currentUrl}`}
       </Text>
       <Feather name="chevron-right" size={14} color={colors.muted} />
     </Pressable>

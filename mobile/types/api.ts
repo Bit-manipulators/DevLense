@@ -73,6 +73,7 @@ export interface HealthResponse {
   status: "ok";
   environment: string;
   execution_sandbox_available: boolean;
+  sandbox_mode?: string;
 }
 
 export interface OcrRequest {

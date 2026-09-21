@@ -72,7 +72,7 @@ export default function SettingsScreen() {
         <TextInput
           value={inputUrl}
           onChangeText={setInputUrl}
-          placeholder="https://devlens-api.onrender.com"
+          placeholder="https://devlense.onrender.com"
           placeholderTextColor={colors.muted}
           autoCapitalize="none"
           autoCorrect={false}
@@ -82,7 +82,7 @@ export default function SettingsScreen() {
         <View style={styles.presetRow}>
           <Text style={styles.presetLabel}>PRESETS:</Text>
           <Pressable
-            onPress={() => setInputUrl("https://devlens-api.onrender.com")}
+            onPress={() => setInputUrl("https://devlense.onrender.com")}
             style={({ pressed }) => [styles.presetPill, pressed && styles.presetPillPressed]}
           >
             <Text style={styles.presetText}>Render Cloud</Text>
@@ -124,8 +124,14 @@ export default function SettingsScreen() {
           <Detail label="BACKEND STATUS" value={health.status === "ok" ? "Connected (200 OK)" : health.status} good />
           <Detail label="ENVIRONMENT" value={health.environment.toUpperCase()} />
           <Detail
-            label="DOCKER SANDBOX"
-            value={health.execution_sandbox_available ? "Available" : "Unavailable (Host does not run Docker engine)"}
+            label="EXECUTION SANDBOX"
+            value={
+              health.execution_sandbox_available
+                ? health.sandbox_mode === "docker"
+                  ? "Active & Ready (Docker Engine)"
+                  : "Active & Ready (Cloud Container Sandbox)"
+                : "Unavailable (No runner detected)"
+            }
             good={health.execution_sandbox_available}
           />
         </Card>
