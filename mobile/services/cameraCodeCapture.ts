@@ -14,7 +14,7 @@ class ExpoCameraCodeCaptureService implements CameraCodeCaptureService {
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ["images"],
       allowsEditing: false,
-      quality: 0.8,
+      quality: 0.7,
       base64: true,
     });
 
@@ -38,6 +38,7 @@ class ExpoCameraCodeCaptureService implements CameraCodeCaptureService {
       confidence: ocrResponse.confidence,
       imageUri: asset.uri,
       provider: ocrResponse.provider,
+      errorMessage: ocrResponse.error_message,
     };
   }
 
@@ -50,7 +51,7 @@ class ExpoCameraCodeCaptureService implements CameraCodeCaptureService {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: false,
-      quality: 0.8,
+      quality: 0.7,
       base64: true,
     });
 
@@ -74,6 +75,7 @@ class ExpoCameraCodeCaptureService implements CameraCodeCaptureService {
       confidence: ocrResponse.confidence,
       imageUri: asset.uri,
       provider: ocrResponse.provider,
+      errorMessage: ocrResponse.error_message,
     };
   }
 }

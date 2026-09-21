@@ -4,6 +4,7 @@ export interface CameraCaptureResult {
   confidence?: number;
   imageUri?: string;
   provider?: string;
+  errorMessage?: string;
 }
 
 export interface CameraCodeCaptureService {

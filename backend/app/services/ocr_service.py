@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import base64
 import io
+import os
 import re
 import shutil
+import sys
 from typing import Optional, Tuple
 
 import httpx
-from PIL import Image
+from PIL import Image, ImageEnhance, ImageOps, ImageStat
 
 from app.config import Settings
 from app.schemas.analysis import SupportedLanguage
@@ -22,7 +24,7 @@ except ImportError:
 class OcrService:
     """Extracts computer source code from images with multi-provider dispatch."""
 
-    MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
+    MAX_IMAGE_SIZE_BYTES = 20 * 1024 * 1024  # 20 MB
 
     def __init__(self, settings: Settings):
         self.settings = settings
@@ -77,8 +79,8 @@ class OcrService:
         if self._is_tesseract_available():
             try:
                 extracted_text, tesseract_conf = self._extract_with_tesseract(image)
-                if extracted_text and extracted_text.strip():
-                    clean_code = self._clean_code(extracted_text)
+                clean_code = self._clean_code(extracted_text)
+                if clean_code and clean_code.strip():
                     detected_lang, lang_conf = self.detect_language(clean_code, hint_language)
                     overall_conf = round(min(1.0, max(0.2, (tesseract_conf * 0.6 + lang_conf * 0.4))), 2)
                     return OcrResponse(
@@ -86,6 +88,14 @@ class OcrService:
                         detected_language=detected_lang,
                         confidence=overall_conf,
                         provider="tesseract",
+                    )
+                else:
+                    return OcrResponse(
+                        code="",
+                        detected_language=hint_language or "python",
+                        confidence=0.0,
+                        provider="tesseract",
+                        error_message="No readable code text could be found in the image. Please take a clearer photo closer to the screen or page.",
                     )
             except Exception:
                 pass
@@ -123,7 +133,6 @@ class OcrService:
             resp.raise_for_status()
             data = resp.json()
             code = data.get("response", "")
-            # Strip markdown code blocks if Ollama enclosed them
             code = re.sub(r"^```[a-zA-Z0-9_-]*\n", "", code)
             code = re.sub(r"\n```$", "", code)
             return code.strip()
@@ -131,31 +140,85 @@ class OcrService:
     def _is_tesseract_available(self) -> bool:
         if pytesseract is None:
             return False
-        return bool(shutil.which("tesseract") or shutil.which(getattr(pytesseract.pytesseract, "tesseract_cmd", "tesseract")))
+        win_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+        if sys.platform == "win32" and os.path.exists(win_path):
+            pytesseract.pytesseract.tesseract_cmd = win_path
+            return True
+        return bool(
+            shutil.which("tesseract")
+            or shutil.which(getattr(pytesseract.pytesseract, "tesseract_cmd", "tesseract"))
+        )
+
+    def _preprocess_image_for_ocr(self, image: Image.Image) -> list[Image.Image]:
+        candidates: list[Image.Image] = []
+        gray = image.convert("L")
+
+        # Detect dark mode IDE (white text on dark background)
+        stat = ImageStat.Stat(gray)
+        avg_brightness = stat.mean[0] if stat.mean else 128
+
+        if avg_brightness < 135:
+            # Invert dark mode so text is dark on light background (Tesseract training format)
+            inverted = ImageOps.invert(gray)
+            enhancer = ImageEnhance.Contrast(inverted)
+            candidates.append(enhancer.enhance(2.0))
+            candidates.append(inverted)
+
+        # Standard contrast-enhanced version
+        enhancer = ImageEnhance.Contrast(gray)
+        candidates.append(enhancer.enhance(1.8))
+        candidates.append(gray)
+        return candidates
 
     def _extract_with_tesseract(self, image: Image.Image) -> Tuple[str, float]:
-        # Grayscale preprocessing
-        gray = image.convert("L")
-        text = pytesseract.image_to_string(gray)
+        candidates = self._preprocess_image_for_ocr(image)
+        best_text = ""
+        best_conf = 0.5
 
-        # Estimate average word confidence
-        conf = 0.8
+        for img in candidates:
+            # PSM 6: Assume a single uniform block of text (ideal for code)
+            try:
+                text = pytesseract.image_to_string(img, config=r"--oem 3 --psm 6")
+                if len(text.strip()) > len(best_text.strip()):
+                    best_text = text
+            except Exception:
+                pass
+
+            if len(best_text.strip()) >= 20:
+                break
+
+        if len(best_text.strip()) < 15:
+            for img in candidates[:2]:
+                try:
+                    text = pytesseract.image_to_string(img, config=r"--oem 3 --psm 3")
+                    if len(text.strip()) > len(best_text.strip()):
+                        best_text = text
+                except Exception:
+                    pass
+
         try:
-            data = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT)
+            sample_img = candidates[0] if candidates else image.convert("L")
+            data = pytesseract.image_to_data(sample_img, output_type=pytesseract.Output.DICT)
             confs = [int(c) for c in data.get("conf", []) if str(c).isdigit() and int(c) >= 0]
             if confs:
-                conf = round(sum(confs) / (len(confs) * 100.0), 2)
+                best_conf = round(sum(confs) / (len(confs) * 100.0), 2)
         except Exception:
-            pass
+            best_conf = 0.8 if len(best_text.strip()) > 10 else 0.4
 
-        return text, conf
+        return best_text, best_conf
 
     def _clean_code(self, raw_text: str) -> str:
-        lines = [line.rstrip() for line in raw_text.splitlines()]
-        # Strip trailing blank lines
+        cleaned = (
+            raw_text.replace("“", '"')
+            .replace("”", '"')
+            .replace("‘", "'")
+            .replace("’", "'")
+            .replace("—", "-")
+            .replace("–", "-")
+        )
+        lines = [line.rstrip() for line in cleaned.splitlines()]
         while lines and not lines[-1].strip():
             lines.pop()
-        # Strip leading blank lines
         while lines and not lines[0].strip():
             lines.pop(0)
         return "\n".join(lines)

@@ -49,7 +49,15 @@ export default function NewDebugSession() {
     try {
       const result = await cameraCodeCapture.captureCode(draft.language);
       setScanResult(result);
-      setShowScanModal(true);
+      if (result.code && result.code.trim()) {
+        updateDraft({
+          code: result.code,
+          language: (result.detectedLanguage as Language) || draft.language,
+        });
+        setShowScanModal(true);
+      } else {
+        setError(result.errorMessage || "No code detected in photo. Please ensure code is clear and in focus.");
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Camera capture failed.");
     } finally {
@@ -63,7 +71,15 @@ export default function NewDebugSession() {
     try {
       const result = await cameraCodeCapture.captureFromGallery(draft.language);
       setScanResult(result);
-      setShowScanModal(true);
+      if (result.code && result.code.trim()) {
+        updateDraft({
+          code: result.code,
+          language: (result.detectedLanguage as Language) || draft.language,
+        });
+        setShowScanModal(true);
+      } else {
+        setError(result.errorMessage || "No code detected in image. Please choose an image with clear code.");
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Image import failed.");
     } finally {
