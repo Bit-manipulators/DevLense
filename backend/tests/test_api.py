@@ -8,6 +8,13 @@ def test_health_endpoint(client):
     assert response.json()["execution_sandbox_available"] is True
 
 
+def test_root_endpoint(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+    assert "service" in response.json()
+
+
 def test_cors_accepts_expo_web_origin(client):
     response = client.options(
         "/api/v1/analyze",

@@ -81,3 +81,14 @@ async def unhandled_error_handler(_: Request, exc: Exception) -> JSONResponse:
 
 
 app.include_router(api_router)
+
+
+@app.get("/", summary="Root status", tags=["Root"])
+async def root():
+    return {
+        "status": "ok",
+        "service": "DevLens API",
+        "version": app.version,
+        "docs": "/docs",
+        "health": "/api/v1/health",
+    }
