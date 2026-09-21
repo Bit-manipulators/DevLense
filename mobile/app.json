@@ -6,11 +6,24 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "scheme": "devlens",
-    "experiments": { "typedRoutes": true },
-    "plugins": ["expo-router"],
+    "newArchEnabled": false,
+    "experiments": {
+      "typedRoutes": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
     "android": {
       "package": "com.devlens.mobile",
-      "usesCleartextTraffic": true,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
@@ -19,4 +32,3 @@
     }
   }
 }
-

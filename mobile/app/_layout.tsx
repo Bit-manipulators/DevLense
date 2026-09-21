@@ -1,8 +1,9 @@
-import { LogBox, Platform } from "react-native";
+import { LogBox, Platform, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { Button } from "@/components/Button";
 import { DebugDraftProvider } from "@/hooks/useDebugDraft";
 import { colors } from "@/constants/theme";
 
@@ -45,6 +46,40 @@ if (Platform.OS === "web" && typeof window !== "undefined") {
       }
     },
     true
+  );
+}
+
+// Global error handling for React Native native runtime
+if (Platform.OS !== "web") {
+  const globalAny = global as any;
+  if (globalAny.ErrorUtils) {
+    const originalHandler = globalAny.ErrorUtils.getGlobalHandler?.();
+    globalAny.ErrorUtils.setGlobalHandler((error: any, isFatal?: boolean) => {
+      console.error("DevLens Native Global Error:", error);
+      if (originalHandler) {
+        try {
+          originalHandler(error, false);
+        } catch {
+          // ignore to avoid crashing process
+        }
+      }
+    });
+  }
+}
+
+export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
+  return (
+    <SafeAreaProvider>
+      <View style={{ flex: 1, backgroundColor: colors.canvas, justifyContent: "center", alignItems: "center", padding: 24 }}>
+        <Text style={{ color: colors.danger, fontSize: 20, fontWeight: "900", marginBottom: 12 }}>
+          Application Error
+        </Text>
+        <Text style={{ color: colors.text, fontSize: 14, textAlign: "center", marginBottom: 24, lineHeight: 20 }}>
+          {error?.message || "An unexpected error occurred while starting DevLens."}
+        </Text>
+        <Button label="Try Again" onPress={retry} />
+      </View>
+    </SafeAreaProvider>
   );
 }
 
