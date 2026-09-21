@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     @classmethod
     def split_origins(cls, value: str | list[str]) -> list[str]:
         if isinstance(value, str):
+            if value.strip() == "*":
+                return ["*"]
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
 

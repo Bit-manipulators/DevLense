@@ -12,9 +12,21 @@ import {
   SessionListItem
 } from "@/types/api";
 
-// Dynamically resolve API URL: automatically matches the browser's hostname
-// (e.g. LAN IP 10.140.36.194 or localhost) so requests succeed on any phone or PC.
+let customApiUrl: string | null = null;
+
+export function setCustomApiUrl(url: string | null): void {
+  customApiUrl = url ? url.trim().replace(/\/$/, "") : null;
+}
+
+export function getCustomApiUrl(): string | null {
+  return customApiUrl;
+}
+
+// Dynamically resolve API URL: supports custom URL, browser hostname, or env variable
 export function getApiUrl(): string {
+  if (customApiUrl) {
+    return customApiUrl;
+  }
   if (typeof window !== "undefined" && window.location?.hostname) {
     if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
       return `http://${window.location.hostname}:8001`;
@@ -23,7 +35,19 @@ export function getApiUrl(): string {
   return (process.env.EXPO_PUBLIC_API_URL || "http://127.0.0.1:8001").replace(/\/$/, "");
 }
 
-const API_URL = getApiUrl();
+export async function testApiUrl(candidateUrl: string): Promise<HealthResponse> {
+  const cleanUrl = candidateUrl.trim().replace(/\/$/, "");
+  let res: Response;
+  try {
+    res = await fetch(`${cleanUrl}/api/v1/health`, { method: "GET" });
+  } catch {
+    throw new Error(`Could not reach ${cleanUrl}. Check network connection or server status.`);
+  }
+  if (!res.ok) {
+    throw new Error(`Server at ${cleanUrl} responded with HTTP ${res.status}.`);
+  }
+  return res.json() as Promise<HealthResponse>;
+}
 
 export class DevLensApiError extends Error {
   constructor(message: string, public readonly status?: number) {
@@ -33,15 +57,16 @@ export class DevLensApiError extends Error {
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const baseUrl = getApiUrl();
   let response: Response;
   try {
-    response = await fetch(`${API_URL}${path}`, {
+    response = await fetch(`${baseUrl}${path}`, {
       ...init,
       headers: { "Content-Type": "application/json", ...init.headers }
     });
   } catch {
     throw new DevLensApiError(
-      "Unable to connect to DevLens server. Check that the backend is running and the phone can reach its LAN IP."
+      `Unable to connect to DevLens server at ${baseUrl}. Verify the server is running or configure its URL in Settings.`
     );
   }
 
@@ -50,7 +75,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const message = body?.detail;
     if (response.status === 404) {
       throw new DevLensApiError(
-        `DevLens API was not found at ${API_URL}. Start the DevLens backend on port 8001, then restart Expo with --clear.`,
+        `DevLens API was not found at ${baseUrl}. Verify the server route or start the backend on port 8001.`,
         response.status
       );
     }

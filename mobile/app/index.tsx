@@ -35,7 +35,7 @@ export default function Dashboard() {
       <Metric value={safeSessions.reduce((total, item) => total + (item?.execution_count || 0), 0).toString()} label="fixes tested" />
     </View>
     <View style={styles.sectionHead}><Text style={styles.section}>RECENT SESSIONS</Text><Text onPress={() => router.push("/history")} style={styles.link}>View all</Text></View>
-    {loading ? <LoadingState label="Loading sessions…" /> : <>{error ? <ErrorPanel message={error} /> : null}{safeSessions.slice(0, 3).map((item) => <SessionCard key={item.id} session={item} onPress={() => router.push({ pathname: "/analysis/[sessionId]", params: { sessionId: item.id } })} />)}{!error && safeSessions.length === 0 ? <EmptyState title="No sessions yet" body="Start with a demo or paste the code that is giving you trouble." /> : null}</>}
+    {loading ? <LoadingState label="Loading sessions…" /> : <>{error ? <ErrorPanel message={error} actionLabel="Configure Server in Settings" onAction={() => router.push("/settings")} /> : null}{safeSessions.slice(0, 3).map((item) => <SessionCard key={item.id} session={item} onPress={() => router.push({ pathname: "/analysis/[sessionId]", params: { sessionId: item.id } })} />)}{!error && safeSessions.length === 0 ? <EmptyState title="No sessions yet" body="Start with a demo or paste the code that is giving you trouble." /> : null}</>}
     <Text style={styles.section}>SUPPORTED LANGUAGES</Text><View style={styles.languages}>{["Python", "C++", "JavaScript", "Java"].map((language) => <Text key={language} style={styles.pill}>{language}</Text>)}</View>
   </Screen>;
 }
