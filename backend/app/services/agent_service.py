@@ -15,7 +15,7 @@ class AgentService:
     def __init__(self, settings: Settings):
         self.settings = settings
         self.ollama_base_url = settings.ollama_base_url.rstrip("/")
-        self.ollama_model = settings.ollama_model or "qwen2.5-coder:7b"
+        self.ollama_model = settings.ollama_model or "qwen2.5-coder:3b"
 
     async def chat(self, request: AgentChatRequest) -> AgentChatResponse:
         # 1. Attempt to query local Ollama model if reachable
@@ -40,6 +40,27 @@ class AgentService:
             model="devlens-heuristic-copilot (offline fallback)",
         )
 
+    async def _resolve_ollama_model(self, client: httpx.AsyncClient) -> str:
+        if self.settings.ollama_model:
+            return self.settings.ollama_model
+        try:
+            resp = await client.get(f"{self.ollama_base_url}/api/tags", timeout=3.0)
+            if resp.status_code == 200:
+                tags = resp.json().get("models", [])
+                model_names = [m.get("name", "") for m in tags]
+                # Prioritize coding models
+                for pref in ("qwen2.5-coder:3b", "qwen2.5-coder:7b", "codellama", "deepseek-coder", "llama3", "mistral"):
+                    for m in model_names:
+                        if pref in m:
+                            return m
+                # Pick any non-embedding model
+                for m in model_names:
+                    if "embed" not in m:
+                        return m
+        except Exception:
+            pass
+        return "qwen2.5-coder:3b"
+
     async def _query_ollama(self, req: AgentChatRequest) -> Optional[str]:
         system_prompt = (
             "You are DevLens Copilot, a senior software engineer and debugging assistant. "
@@ -59,14 +80,17 @@ class AgentService:
 
         prompt = f"{context_block}\nDeveloper Query: {req.user_message}\n\nPlease provide your expert analysis:"
 
-        payload = {
-            "model": self.ollama_model,
-            "prompt": prompt,
-            "system": system_prompt,
-            "stream": False,
-        }
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            model_to_use = await self._resolve_ollama_model(client)
+            self.ollama_model = model_to_use
 
-        async with httpx.AsyncClient(timeout=35.0) as client:
+            payload = {
+                "model": model_to_use,
+                "prompt": prompt,
+                "system": system_prompt,
+                "stream": False,
+            }
+
             resp = await client.post(f"{self.ollama_base_url}/api/generate", json=payload)
             if resp.status_code == 200:
                 data = resp.json()
@@ -76,9 +100,23 @@ class AgentService:
         return None
 
     def _heuristic_copilot(self, req: AgentChatRequest) -> Tuple[str, Optional[str]]:
-        query = req.user_message.lower()
+        query = req.user_message.lower().strip()
         code = req.code
         lang = req.language
+
+        # Intent 0: Casual Greetings
+        greetings = ("hello", "hi", "hey", "hlo", "hlooo", "good morning", "good evening", "howdy", "sup")
+        clean_query = query.strip("!?.")
+        if any(clean_query == g or clean_query.startswith(g + " ") for g in greetings):
+            greeting_reply = (
+                f"### 👋 Hello! I'm DevLens Copilot\n\n"
+                f"I'm your AI debugging assistant ready to inspect your **{lang.upper()}** code.\n\n"
+                f"Here are quick things you can ask me to do:\n"
+                f"- **Explain Big-O:** Ask *\"What is the time complexity?\"* or click **Explain Big-O**\n"
+                f"- **Edge Cases:** Ask *\"Generate edge cases\"* to inspect critical boundary inputs\n"
+                f"- **Alternative Fix:** Ask *\"Suggest an alternative fix\"* to view refactored code\n"
+            )
+            return greeting_reply, None
 
         # Intent 1: Big-O / Complexity Analysis
         if any(k in query for k in ("complexity", "big-o", "big o", "time complexity", "space complexity", "runtime")):

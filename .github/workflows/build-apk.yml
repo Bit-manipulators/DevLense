@@ -1,0 +1,165 @@
+name: Build & Release Android APK
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/build-apk.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mobile/**'
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Publish release with APK asset'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  test-and-lint:
+    name: Run Test Suites
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: 'backend/requirements.txt'
+
+      - name: Install Backend Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-asyncio httpx
+
+      - name: Run Backend Pytest
+        run: |
+          cd backend
+          pytest -v
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'mobile/package.json'
+
+      - name: Install Mobile Dependencies
+        run: |
+          cd mobile
+          npm install
+
+      - name: Run Mobile Jest Tests
+        run: |
+          cd mobile
+          npm test
+
+      - name: Run Mobile TypeScript Check
+        run: |
+          cd mobile
+          npx tsc --noEmit
+
+  build-android-apk:
+    name: Build Standalone Android APK
+    needs: [test-and-lint]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'mobile/package.json'
+
+      - name: Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle Packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Install Mobile Dependencies
+        run: |
+          cd mobile
+          npm install
+
+      - name: Generate Native Android Project (Expo Prebuild)
+        run: |
+          cd mobile
+          npx expo prebuild --platform android --clean
+
+      - name: Build Standalone Debug APK
+        run: |
+          cd mobile/android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Prepare APK Asset
+        id: prepare_apk
+        run: |
+          mkdir -p artifacts
+          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk artifacts/devlens-v0.1.0-debug.apk
+          echo "apk_path=artifacts/devlens-v0.1.0-debug.apk" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK to GitHub Actions Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: devlens-android-apk
+          path: artifacts/devlens-v0.1.0-debug.apk
+          retention-days: 30
+
+      - name: Publish GitHub Release with APK
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.1.0-apk
+          name: "DevLens Android APK v0.1.0"
+          draft: false
+          prerelease: false
+          files: artifacts/devlens-v0.1.0-debug.apk
+          body: |
+            ## 📱 DevLens Android APK Download
+
+            The standalone Android APK for DevLens has been compiled by GitHub Actions.
+
+            ### How to Install on your Phone:
+            1. Open this page on your Android phone's browser.
+            2. Tap **`devlens-v0.1.0-debug.apk`** below to download.
+            3. Tap the downloaded file to install.
+            4. If prompted:
+               - **"Install unknown apps"**: Tap *Settings* and toggle *Allow from this source*.
+               - **"Play Protect warning"**: Tap *More details* -> *Install anyway*.
+            5. Connect to your backend IP address (e.g. `http://<your-pc-ip>:8001`) to start debugging!
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Summary
+        run: |
+          echo "### 🚀 Android APK Built Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "- **Artifact:** \`devlens-v0.1.0-debug.apk\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** Ready for phone installation via GitHub Releases or USB ADB." >> $GITHUB_STEP_SUMMARY

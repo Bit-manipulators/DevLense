@@ -243,7 +243,21 @@ npm test
 npm run typecheck
 ```
 
-All 18 backend tests and 4 frontend test suites (11 unit tests) pass with zero warnings.
+All 20 backend tests and 4 frontend test suites (11 unit tests) pass with zero warnings.
+
+---
+
+## 📱 Android APK & Phone Installation
+
+DevLens includes an automated GitHub Actions CI pipeline that builds a standalone Android APK on every push and publishes it directly to GitHub Releases.
+
+* **Direct Phone Download:** Download `devlens-v0.1.0-debug.apk` from [GitHub Releases](https://github.com/Myparadox-creator/DevLense/releases) directly on your Android phone browser.
+* **USB Cable 1-Click Install:** Connect your Android phone with USB debugging enabled and run:
+  ```powershell
+  .\scripts\install-to-phone.ps1
+  ```
+* **EAS Cloud Build:** Run `cd mobile && eas build -p android --profile preview` to build via Expo Application Services.
+* **Full Guide:** See [docs/APK_CI_AND_INSTALLATION.md](docs/APK_CI_AND_INSTALLATION.md) for step-by-step instructions.
 
 ---
 
@@ -255,6 +269,7 @@ All 18 backend tests and 4 frontend test suites (11 unit tests) pass with zero w
 - [x] Safe HTTP 204 mobile deletion & web browser extension error interception
 - [x] Camera & Gallery OCR code scanner with confidence review modal
 - [x] Interactive AI Debugging Agent (DevLens Copilot) with Ollama & Heuristic fallback
+- [x] Automated Android APK CI pipeline & direct phone installation guide
 - [ ] Multi-tenant authentication (JWT / OAuth2) & PostgreSQL storage
 - [ ] Distributed runner worker fleet via Redis / Celery
 - [ ] Tree-sitter AST parser integration for advanced multi-language analysis
