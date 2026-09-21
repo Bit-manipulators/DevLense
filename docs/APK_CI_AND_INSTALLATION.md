@@ -13,7 +13,7 @@ Whenever code is pushed to `main` (or a release tag / manual dispatch), the GitH
 3. **Expo Prebuild:** Generates native Android Gradle project structures via `npx expo prebuild --platform android --clean`.
 4. **Gradle Compilation:** Compiles the standalone debug APK (`./gradlew assembleDebug`) containing all bundled JavaScript assets and native runtime binaries.
 5. **Artifact Publishing:**
-   - Uploads `devlens-v0.1.0-debug.apk` to **GitHub Actions Artifacts** (retained for 30 days).
+   - Uploads `devlens-v0.1.0.apk` to **GitHub Actions Artifacts** (retained for 30 days).
    - Automatically attaches the `.apk` file to **GitHub Releases** for 1-tap phone download.
 
 ---
@@ -24,7 +24,7 @@ Whenever code is pushed to `main` (or a release tag / manual dispatch), the GitH
 1. Open the browser (Chrome, Brave, Firefox) on your Android phone.
 2. Navigate to your repository releases page:  
    👉 `https://github.com/Myparadox-creator/DevLense/releases`
-3. Tap on the latest release and download **`devlens-v0.1.0-debug.apk`**.
+3. Tap on the latest release and download **`devlens-v0.1.0.apk`**.
 4. Once downloaded, tap the file in your notification bar or Downloads folder to install.
 5. If Android shows a prompt:
    - **"For your security, your phone is not allowed to install unknown apps from this source"**: Tap **Settings** -> Toggle **"Allow from this source"** -> Tap **Back** -> Tap **Install**.

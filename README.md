@@ -251,7 +251,7 @@ All 20 backend tests and 4 frontend test suites (11 unit tests) pass with zero w
 
 DevLens includes an automated GitHub Actions CI pipeline that builds a standalone Android APK on every push and publishes it directly to GitHub Releases.
 
-* **Direct Phone Download:** Download `devlens-v0.1.0-debug.apk` from [GitHub Releases](https://github.com/Myparadox-creator/DevLense/releases) directly on your Android phone browser.
+* **Direct Phone Download:** Download `devlens-v0.1.0.apk` from [GitHub Releases](https://github.com/Myparadox-creator/DevLense/releases) directly on your Android phone browser.
 * **USB Cable 1-Click Install:** Connect your Android phone with USB debugging enabled and run:
   ```powershell
   .\scripts\install-to-phone.ps1

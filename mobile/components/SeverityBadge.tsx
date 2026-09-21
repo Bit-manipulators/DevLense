@@ -11,7 +11,9 @@ const tone: Record<Severity, string> = {
 };
 
 export function SeverityBadge({ severity }: { severity: Severity }) {
-  return <View style={[styles.badge, { borderColor: tone[severity] }]}><Text style={[styles.text, { color: tone[severity] }]}>{severity.toUpperCase()}</Text></View>;
+  const color = (severity && tone[severity]) ? tone[severity] : colors.warning;
+  const label = (severity ? String(severity) : "INFO").toUpperCase();
+  return <View style={[styles.badge, { borderColor: color }]}><Text style={[styles.text, { color }]}>{label}</Text></View>;
 }
 
 const styles = StyleSheet.create({

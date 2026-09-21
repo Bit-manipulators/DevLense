@@ -24,12 +24,18 @@ export default function Dashboard() {
   }, []);
   useEffect(() => { void load(); }, [load]);
 
+  const safeSessions = Array.isArray(sessions) ? sessions : [];
+
   return <Screen>
     <View style={styles.hero}><Text style={styles.eyebrow}>AI DEBUGGING ASSISTANT</Text><Text style={styles.logo}>DEV<Text style={styles.accent}>LENS</Text></Text><Text style={styles.tagline}>Find the fault. Understand the root cause. Validate the fix.</Text></View>
     <Button label="New Debug Session" onPress={() => router.push("/new-session")} accessibilityLabel="Start new debugging session" />
-    <View style={styles.stats}><Metric value={sessions.length.toString()} label="analyzed" /><Metric value={sessions.filter((item) => item.severity !== "low").length.toString()} label="bugs found" /><Metric value={sessions.reduce((total, item) => total + item.execution_count, 0).toString()} label="fixes tested" /></View>
+    <View style={styles.stats}>
+      <Metric value={safeSessions.length.toString()} label="analyzed" />
+      <Metric value={safeSessions.filter((item) => item?.severity && item.severity !== "low").length.toString()} label="bugs found" />
+      <Metric value={safeSessions.reduce((total, item) => total + (item?.execution_count || 0), 0).toString()} label="fixes tested" />
+    </View>
     <View style={styles.sectionHead}><Text style={styles.section}>RECENT SESSIONS</Text><Text onPress={() => router.push("/history")} style={styles.link}>View all</Text></View>
-    {loading ? <LoadingState label="Loading sessions…" /> : <>{error ? <ErrorPanel message={error} /> : null}{sessions.slice(0, 3).map((item) => <SessionCard key={item.id} session={item} onPress={() => router.push({ pathname: "/analysis/[sessionId]", params: { sessionId: item.id } })} />)}{!error && sessions.length === 0 ? <EmptyState title="No sessions yet" body="Start with a demo or paste the code that is giving you trouble." /> : null}</>}
+    {loading ? <LoadingState label="Loading sessions…" /> : <>{error ? <ErrorPanel message={error} /> : null}{safeSessions.slice(0, 3).map((item) => <SessionCard key={item.id} session={item} onPress={() => router.push({ pathname: "/analysis/[sessionId]", params: { sessionId: item.id } })} />)}{!error && safeSessions.length === 0 ? <EmptyState title="No sessions yet" body="Start with a demo or paste the code that is giving you trouble." /> : null}</>}
     <Text style={styles.section}>SUPPORTED LANGUAGES</Text><View style={styles.languages}>{["Python", "C++", "JavaScript", "Java"].map((language) => <Text key={language} style={styles.pill}>{language}</Text>)}</View>
   </Screen>;
 }

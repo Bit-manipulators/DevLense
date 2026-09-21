@@ -10,6 +10,7 @@
     "plugins": ["expo-router"],
     "android": {
       "package": "com.devlens.mobile",
+      "usesCleartextTraffic": true,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",

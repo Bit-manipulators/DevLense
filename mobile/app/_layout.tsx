@@ -1,6 +1,7 @@
 import { LogBox, Platform } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { DebugDraftProvider } from "@/hooks/useDebugDraft";
 import { colors } from "@/constants/theme";
@@ -48,13 +49,27 @@ if (Platform.OS === "web" && typeof window !== "undefined") {
 }
 
 export default function RootLayout() {
-  return <DebugDraftProvider><StatusBar style="light" /><Stack screenOptions={{ headerStyle: { backgroundColor: colors.canvas }, headerTintColor: colors.text, headerShadowVisible: false, contentStyle: { backgroundColor: colors.canvas } }}>
-    <Stack.Screen name="index" options={{ headerShown: false }} />
-    <Stack.Screen name="new-session" options={{ title: "New Debug Session" }} />
-    <Stack.Screen name="analysis/[sessionId]" options={{ title: "Analysis" }} />
-    <Stack.Screen name="execution" options={{ title: "Sandbox Output" }} />
-    <Stack.Screen name="history" options={{ title: "Debug History" }} />
-    <Stack.Screen name="settings" options={{ title: "Settings" }} />
-  </Stack></DebugDraftProvider>;
+  return (
+    <SafeAreaProvider>
+      <DebugDraftProvider>
+        <StatusBar style="light" />
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: colors.canvas },
+            headerTintColor: colors.text,
+            headerShadowVisible: false,
+            contentStyle: { backgroundColor: colors.canvas },
+          }}
+        >
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="new-session" options={{ title: "New Debug Session" }} />
+          <Stack.Screen name="analysis/[sessionId]" options={{ title: "Analysis" }} />
+          <Stack.Screen name="execution" options={{ title: "Sandbox Output" }} />
+          <Stack.Screen name="history" options={{ title: "Debug History" }} />
+          <Stack.Screen name="settings" options={{ title: "Settings" }} />
+        </Stack>
+      </DebugDraftProvider>
+    </SafeAreaProvider>
+  );
 }
 
