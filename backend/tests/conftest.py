@@ -36,8 +36,15 @@ def client(tmp_path):
     try:
         with TestClient(app) as test_client:
             app.state.execution_service = FakeSandbox()
+            from app.analyzers.rule_based import RuleBasedAnalyzer
             from app.orchestrator.debug_orchestrator import DebugOrchestrator
+            from app.services.analysis_service import AnalysisService
+
             app.state.debug_orchestrator = DebugOrchestrator(execution_service=app.state.execution_service)
+            app.state.analysis_service = AnalysisService(
+                analyzer=RuleBasedAnalyzer(),
+                debug_orchestrator=app.state.debug_orchestrator,
+            )
             yield test_client
     finally:
         database.Base.metadata.drop_all(bind=database.engine)

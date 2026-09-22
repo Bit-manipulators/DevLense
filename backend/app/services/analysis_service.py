@@ -25,8 +25,21 @@ class AnalysisService:
         self, language: str, code: str, error_message: str = "", question: str = ""
     ) -> AnalysisFinding:
         # Priority 1: Configured Analyzer (deterministic static rules or LLM)
+        finding: AnalysisFinding | None = None
         try:
             finding = await self.analyzer.analyze(language, code, error_message, question)
+        except Exception as exc:
+            logger.warning(
+                "Configured analyzer (%s) failed, falling back to rule-based analyzer: %s",
+                type(self.analyzer).__name__,
+                exc,
+            )
+            try:
+                finding = await self.fallback.analyze(language, code, error_message, question)
+            except Exception as fallback_exc:
+                logger.warning("Fallback analyzer also failed: %s", fallback_exc)
+
+        if finding:
             is_generic = (
                 "No definite fault" in finding.summary
                 or "No Static Defects Detected" in finding.summary
@@ -34,12 +47,6 @@ class AnalysisService:
             )
             if not is_generic:
                 return finding
-        except Exception as exc:
-            logger.warning(
-                "Configured analyzer (%s) failed: %s",
-                type(self.analyzer).__name__,
-                exc,
-            )
 
         # Priority 2: Evidence-Driven Debug Orchestrator (real compiler/sandbox execution)
         if self.debug_orchestrator:
