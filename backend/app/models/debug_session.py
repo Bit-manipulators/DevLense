@@ -26,6 +26,16 @@ class DebugSession(Base):
     corrected_code: Mapped[str] = mapped_column(Text, nullable=False)
     debugging_steps_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    mode: Mapped[str] = mapped_column(String(32), default="general", nullable=False)
+    problem_statement: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    constraints: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    status: Mapped[str] = mapped_column(String(32), default="completed", nullable=False)
+    failure_type: Mapped[str] = mapped_column(String(64), default="", nullable=False)
+    diff: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    generated_tests_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    iterations_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    validation_json: Mapped[str] = mapped_column(Text, default="{}", nullable=False)
+    complexity_json: Mapped[str] = mapped_column(Text, default="{}", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
     )

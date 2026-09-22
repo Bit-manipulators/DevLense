@@ -84,6 +84,40 @@ class PythonAnalyzer(LanguageAnalyzer):
                     confidence=0.94,
                 )
 
+        # General off-by-one: range(len(arr) + 1)
+        off_by_one_range = re.search(r"range\(len\((?P<arr>\w+)\)\s*\+\s*1\)", code)
+        if off_by_one_range:
+            line = self._line_of(code, r"range\(len\(\w+\)\s*\+\s*1\)") or 1
+            arr = off_by_one_range.group("arr")
+            corrected = re.sub(rf"range\(len\({arr}\)\s*\+\s*1\)", f"range(len({arr}))", code, count=1)
+            return self._finding(
+                summary="Likely list index out of range (off-by-one)",
+                severity="high",
+                root_cause=f"`range(len({arr}) + 1)` iterates up to `len({arr})`, but valid indices are 0 to `len({arr}) - 1`.",
+                explanation="Python lists are 0-indexed. Accessing `arr[len(arr)]` raises `IndexError: list index out of range`.",
+                code=code,
+                suggested_fix=f"Use `range(len({arr}))` instead of `range(len({arr}) + 1)`.",
+                corrected_code=corrected,
+                affected_lines=[line],
+                confidence=0.96,
+            )
+
+        # Dangerous mutable default argument
+        mutable_default = re.search(r"def\s+\w+\s*\([^)]*?(?P<arg>\w+)\s*=\s*(?P<default>\[\]|\{\})", code)
+        if mutable_default:
+            line = self._line_of(code, r"def\s+\w+\s*\([^)]*?=\s*(\[\]|\{\})") or 1
+            arg = mutable_default.group("arg")
+            return self._finding(
+                summary="Dangerous mutable default argument",
+                severity="medium",
+                root_cause=f"Default argument `{arg}` is initialized with a mutable container (`{mutable_default.group('default')}`).",
+                explanation="In Python, default arguments are evaluated once at function definition time. Subsequent calls share the same mutable object.",
+                code=code,
+                suggested_fix=f"Set default to `None` (e.g. `{arg}=None`) and initialize inside function: `if {arg} is None: {arg} = []`.",
+                affected_lines=[line],
+                confidence=0.93,
+            )
+
         if "NameError" in error_message:
             match = re.search(r"name ['\"](?P<name>\w+)['\"] is not defined", error_message)
             name = match.group("name") if match else "a referenced name"
@@ -110,6 +144,45 @@ class PythonAnalyzer(LanguageAnalyzer):
                 suggested_fix="Check the sequence length before indexing and adjust the loop bound.",
                 affected_lines=[line] if line else [],
                 confidence=0.9,
+            )
+
+        if "TypeError" in error_message:
+            return self._finding(
+                summary="Python TypeError",
+                severity="high",
+                root_cause=error_message.strip(),
+                explanation="Python raised a TypeError when an operation was applied to an object of inappropriate type.",
+                code=code,
+                suggested_fix="Verify object types before operations, or convert types explicitly.",
+                affected_lines=[],
+                confidence=0.91,
+            )
+
+        if "KeyError" in error_message:
+            m = re.search(r"KeyError:\s*(.+)", error_message)
+            key = m.group(1).strip() if m else "a key"
+            return self._finding(
+                summary="Dictionary KeyError",
+                severity="high",
+                root_cause=f"Key {key} was not found in the dictionary.",
+                explanation="Accessing a non-existent dictionary key directly raises KeyError. Use `.get(key, default)` or verify with `in`.",
+                code=code,
+                suggested_fix=f"Use `dict.get({key})` or check `if {key} in dict:` before access.",
+                affected_lines=[],
+                confidence=0.92,
+            )
+
+        if "ZeroDivisionError" in error_message:
+            line = self._line_of(code, r"/")
+            return self._finding(
+                summary="Division by zero",
+                severity="high",
+                root_cause="A numeric division or modulo operation evaluated with a denominator of zero.",
+                explanation="Division by zero is undefined and raises ZeroDivisionError in Python.",
+                code=code,
+                suggested_fix="Guard denominator against zero: `if denominator != 0:`.",
+                affected_lines=[line] if line else [],
+                confidence=0.95,
             )
 
         return self._no_definite_match(code, "Python")

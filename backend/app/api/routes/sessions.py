@@ -29,6 +29,12 @@ def _detail(item: DebugSession) -> SessionDetail:
         corrected_code=item.corrected_code,
         debugging_steps=json.loads(item.debugging_steps_json),
         confidence=item.confidence,
+        mode=getattr(item, "mode", "general"),
+        status=getattr(item, "status", "completed"),
+        diff=getattr(item, "diff", ""),
+        problem_statement=getattr(item, "problem_statement", ""),
+        constraints=getattr(item, "constraints", ""),
+        failure_type=getattr(item, "failure_type", ""),
         execution_count=len(item.execution_results),
         created_at=item.created_at,
         execution_history=[

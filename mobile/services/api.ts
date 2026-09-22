@@ -3,6 +3,8 @@ import {
   AgentChatResponse,
   AnalyzeRequest,
   AnalysisResponse,
+  DebugReport,
+  DebugRequest,
   DebugSession,
   ExecuteRequest,
   ExecuteResponse,
@@ -46,9 +48,6 @@ export function getApiUrl(): string {
   if (customApiUrl) {
     return customApiUrl;
   }
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL.replace(/\/$/, "");
-  }
   if (typeof window !== "undefined" && window.location?.hostname) {
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
       return "http://127.0.0.1:8001";
@@ -58,8 +57,12 @@ export function getApiUrl(): string {
       return `http://${window.location.hostname}:8001`;
     }
   }
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL.replace(/\/$/, "");
+  }
   return DEFAULT_CLOUD_API_URL.replace(/\/$/, "");
 }
+
 
 export async function testApiUrl(candidateUrl: string): Promise<HealthResponse> {
   const cleanUrl = candidateUrl.trim().replace(/\/$/, "");
@@ -134,3 +137,6 @@ export const extractCodeFromImage = (payload: OcrRequest) =>
 
 export const sendAgentChatMessage = (payload: AgentChatRequest) =>
   request<AgentChatResponse>("/api/v1/agent/chat", { method: "POST", body: JSON.stringify(payload) });
+
+export const debugCode = (payload: DebugRequest) =>
+  request<DebugReport>("/api/v1/debug", { method: "POST", body: JSON.stringify(payload) });

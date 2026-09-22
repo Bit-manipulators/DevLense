@@ -37,4 +37,10 @@ class SessionDetail(SessionListItem):
     suggested_fix: str
     corrected_code: str
     debugging_steps: list[str] = Field(default_factory=list)
+    mode: str = "general"
+    status: str = "completed"
+    diff: str = ""
+    problem_statement: str = ""
+    constraints: str = ""
+    failure_type: str = ""
     execution_history: list[SessionExecutionItem] = Field(default_factory=list)

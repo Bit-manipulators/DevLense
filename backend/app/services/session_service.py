@@ -47,6 +47,42 @@ class SessionService:
         self.database.refresh(item)
         return item
 
+    def create_debug_session(
+        self,
+        *,
+        request: Any,
+        report: Any,
+    ) -> DebugSession:
+        item = DebugSession(
+            language=report.language,
+            code=report.original_code,
+            error_message=getattr(request, "error_message", "") or "",
+            question=getattr(request, "question", "") or "",
+            summary=report.problem_summary or "Debug Session",
+            severity="high" if report.status in ("failed", "needs_review") else "medium",
+            root_cause=report.root_cause,
+            explanation=f"Status: {report.status}. Failure type: {report.failure_type}.",
+            affected_lines_json=json.dumps(report.affected_lines),
+            suggested_fix=report.iterations[-1].suggested_fix if report.iterations else "See debug report",
+            corrected_code=report.corrected_code,
+            debugging_steps_json=json.dumps([f"Ran {report.tests_run} tests: {report.tests_passed} passed, {report.tests_failed} failed."]),
+            confidence=0.95 if report.status in ("fixed", "passed") else 0.5,
+            mode=getattr(request, "mode", "general"),
+            problem_statement=getattr(request, "problem_statement", ""),
+            constraints=getattr(request, "constraints", ""),
+            status=report.status,
+            failure_type=report.failure_type,
+            diff=report.diff,
+            generated_tests_json=json.dumps([e.model_dump() for e in report.evidence]),
+            iterations_json=json.dumps([it.model_dump() for it in report.iterations]),
+            validation_json=json.dumps(report.validation.model_dump()),
+            complexity_json=json.dumps(report.complexity.model_dump()),
+        )
+        self.database.add(item)
+        self.database.commit()
+        self.database.refresh(item)
+        return item
+
     def list_sessions(self, limit: int = 50, offset: int = 0) -> list[DebugSession]:
         statement = (
             select(DebugSession)

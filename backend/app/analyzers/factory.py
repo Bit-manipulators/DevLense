@@ -29,16 +29,19 @@ class AnalyzerFactory:
     @classmethod
     def get_language_analyzer(cls, language: str) -> LanguageAnalyzer:
         """Resolves a language string (with aliases) and returns the corresponding language analyzer."""
-        normalized = cls.normalize_language(language)
-        analyzer_cls = cls._LANGUAGE_ANALYZERS.get(normalized, PythonAnalyzer)
+        from app.languages.registry import LanguageRegistry, UnsupportedLanguageError
+
+        canonical = LanguageRegistry.normalize(language)
+        analyzer_cls = cls._LANGUAGE_ANALYZERS.get(canonical)  # type: ignore[arg-type]
+        if not analyzer_cls:
+            raise UnsupportedLanguageError(language)
         return analyzer_cls()
 
     @classmethod
     def normalize_language(cls, language: str) -> SupportedLanguage:
-        cleaned = language.strip().lower() if isinstance(language, str) else ""
-        if cleaned in LANGUAGE_ALIASES:
-            return LANGUAGE_ALIASES[cleaned]
-        return "python"
+        from app.languages.registry import LanguageRegistry
+
+        return LanguageRegistry.normalize(language)  # type: ignore[return-value]
 
     @classmethod
     def get_provider(cls, settings: Settings) -> AnalyzerProvider:

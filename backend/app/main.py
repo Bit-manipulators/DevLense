@@ -19,6 +19,7 @@ from app.api.router import api_router
 from app.config import get_settings
 from app.database import init_db
 from app.execution.hybrid import HybridExecutionService
+from app.orchestrator.debug_orchestrator import DebugOrchestrator
 from app.services.analysis_service import AnalysisService
 from app.utils.rate_limit import InMemoryRateLimiter
 
@@ -30,9 +31,17 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     init_db()
     app.state.settings = settings
-    app.state.analysis_service = AnalysisService(get_analyzer(settings))
     app.state.execution_service = HybridExecutionService(settings)
+    app.state.debug_orchestrator = DebugOrchestrator(
+        execution_service=app.state.execution_service,
+        settings=settings,
+    )
+    app.state.analysis_service = AnalysisService(
+        analyzer=get_analyzer(settings),
+        debug_orchestrator=app.state.debug_orchestrator,
+    )
     app.state.rate_limiter = InMemoryRateLimiter(settings.max_requests_per_minute)
+
     yield
 
 

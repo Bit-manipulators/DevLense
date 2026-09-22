@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     max_output_size: int = Field(default=10_000, ge=1_000, le=100_000)
     max_requests_per_minute: int = Field(default=60, ge=1, le=1_000)
     execution_memory_limit_mb: int = Field(default=256, ge=64, le=2_048)
+    max_debug_iterations: int = Field(default=3, ge=1, le=10)
+    max_generated_tests: int = Field(default=10, ge=1, le=50)
+    max_problem_size: int = Field(default=20_000, ge=500, le=100_000)
 
     @field_validator("allowed_origins", mode="before")
     @classmethod

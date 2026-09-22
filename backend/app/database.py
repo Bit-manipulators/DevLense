@@ -35,6 +35,30 @@ def init_db() -> None:
 
     Base.metadata.create_all(bind=engine)
 
+    # Automatically migrate new columns for existing SQLite databases
+    if engine.url.drivername.startswith("sqlite"):
+        from sqlalchemy import text
+
+        with engine.connect() as conn:
+            result = conn.execute(text("PRAGMA table_info(debug_sessions);")).fetchall()
+            existing_cols = {row[1] for row in result}
+            new_columns = {
+                "mode": "TEXT DEFAULT 'general'",
+                "problem_statement": "TEXT DEFAULT ''",
+                "constraints": "TEXT DEFAULT ''",
+                "status": "TEXT DEFAULT 'completed'",
+                "failure_type": "TEXT DEFAULT ''",
+                "diff": "TEXT DEFAULT ''",
+                "generated_tests_json": "TEXT DEFAULT '[]'",
+                "iterations_json": "TEXT DEFAULT '[]'",
+                "validation_json": "TEXT DEFAULT '{}'",
+                "complexity_json": "TEXT DEFAULT '{}'",
+            }
+            for col_name, col_type in new_columns.items():
+                if col_name not in existing_cols:
+                    conn.execute(text(f"ALTER TABLE debug_sessions ADD COLUMN {col_name} {col_type};"))
+            conn.commit()
+
 
 def get_db() -> Generator[Session, None, None]:
     database = SessionLocal()

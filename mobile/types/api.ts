@@ -111,3 +111,80 @@ export interface AgentChatResponse {
   code_snippet?: string;
   model: string;
 }
+
+export type DebugMode = "general" | "leetcode";
+export type DebugStatus = "fixed" | "failed" | "passed" | "needs_review";
+
+export interface DebugTestCase {
+  input: string;
+  expected_output?: string;
+}
+
+export interface DebugRequest {
+  mode?: DebugMode;
+  language: Language;
+  code: string;
+  problem_statement?: string;
+  constraints?: string;
+  error_message?: string;
+  question?: string;
+  stdin?: string;
+  expected_output?: string;
+  test_cases?: DebugTestCase[];
+}
+
+export interface FailureEvidence {
+  failure_type: string;
+  test_case_input: string;
+  expected_output?: string;
+  actual_output?: string;
+  exit_code: number;
+  stderr: string;
+  evidence: string;
+  likely_root_cause: string;
+}
+
+export interface IterationRecord {
+  iteration: number;
+  diagnosis: string;
+  suggested_fix: string;
+  diff: string;
+  tests_passed: number;
+  tests_failed: number;
+  validated: boolean;
+}
+
+export interface ValidationSummary {
+  compile: boolean;
+  runtime: boolean;
+  tests: boolean;
+}
+
+export interface ComplexityReport {
+  time_complexity: string;
+  space_complexity: string;
+  is_estimated: boolean;
+  details: string;
+  is_bottleneck: boolean;
+  warning?: string | null;
+}
+
+export interface DebugReport {
+  session_id?: string;
+  status: DebugStatus;
+  language: Language;
+  problem_summary: string;
+  root_cause: string;
+  failure_type: string;
+  evidence: FailureEvidence[];
+  original_code: string;
+  corrected_code: string;
+  diff: string;
+  affected_lines: number[];
+  iterations: IterationRecord[];
+  tests_run: number;
+  tests_passed: number;
+  tests_failed: number;
+  validation: ValidationSummary;
+  complexity: ComplexityReport;
+}
