@@ -19,3 +19,8 @@ mobile/ios/
 .env
 *.log
 .DS_Store
+
+# Presentation and slides directory
+ppt/
+*.ppt
+*.pptx
