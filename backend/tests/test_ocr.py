@@ -90,3 +90,14 @@ def test_language_detection_heuristics():
     lang, conf = service.detect_language(java_code)
     assert lang == "java"
     assert conf >= 0.6
+
+    # C++ loop without #include
+    cpp_loop = "for(int i = 0; i <= n; i++) {\n    a[i] = i * 2;\n}"
+    lang_loop, conf_loop = service.detect_language(cpp_loop)
+    assert lang_loop == "cpp"
+    assert conf_loop >= 0.6
+
+    # Hint priority
+    ambiguous = "int a = 5;"
+    lang_hint, _ = service.detect_language(ambiguous, hint="cpp")
+    assert lang_hint == "cpp"

@@ -63,8 +63,30 @@ def test_analyze_cpp_array_bound(client):
     )
     assert response.status_code == 201
     body = response.json()
+    assert body["language"] == "cpp"
     assert body["summary"] == "Possible array index out of bounds"
     assert "i < 5" in body["corrected_code"]
+
+
+def test_analyze_cpp_variable_bound_and_alias_normalization(client):
+    response = client.post(
+        "/api/v1/analyze",
+        json={
+            "language": "c++",
+            "code": "for(int i = 0; i <= n; i++)",
+            "error_message": "",
+        },
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["language"] == "cpp"
+    assert "Python" not in body["summary"]
+    assert body["corrected_code"] == "for(int i = 0; i < n; i++)"
+
+    # Verify session persists original code and corrected code distinctly
+    detail = client.get(f"/api/v1/sessions/{body['session_id']}").json()
+    assert detail["code"] == "for(int i = 0; i <= n; i++)"
+    assert detail["corrected_code"] == "for(int i = 0; i < n; i++)"
 
 
 def test_rejects_invalid_or_unsupported_requests(client):

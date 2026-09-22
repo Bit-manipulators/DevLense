@@ -47,6 +47,7 @@ class OcrService:
 
         try:
             image = Image.open(io.BytesIO(image_bytes))
+            image = ImageOps.exif_transpose(image)
             image.load()
         except Exception as err:
             raise ValueError(f"Unable to parse image data: {err}") from err
@@ -161,13 +162,25 @@ class OcrService:
             # Invert dark mode so text is dark on light background (Tesseract training format)
             inverted = ImageOps.invert(gray)
             enhancer = ImageEnhance.Contrast(inverted)
-            candidates.append(enhancer.enhance(2.0))
+            c_inv = enhancer.enhance(2.0)
+            sharp_inv = ImageEnhance.Sharpness(c_inv).enhance(1.8)
+            candidates.append(sharp_inv)
+            candidates.append(c_inv)
             candidates.append(inverted)
 
-        # Standard contrast-enhanced version
+        # Standard contrast & sharpness enhanced version
         enhancer = ImageEnhance.Contrast(gray)
-        candidates.append(enhancer.enhance(1.8))
+        c_gray = enhancer.enhance(1.8)
+        sharp_gray = ImageEnhance.Sharpness(c_gray).enhance(1.6)
+        candidates.append(sharp_gray)
+        candidates.append(c_gray)
         candidates.append(gray)
+
+        # Binarized threshold candidate for high clarity on screen glare
+        threshold = 128
+        binarized = gray.point(lambda p: 255 if p > threshold else 0)
+        candidates.append(binarized)
+
         return candidates
 
     def _extract_with_tesseract(self, image: Image.Image) -> Tuple[str, float]:
@@ -258,6 +271,14 @@ class OcrService:
             scores["cpp"] += 3
         if re.search(r"\bint\s+main\s*\(", code) and "System" not in code:
             scores["cpp"] += 3
+        if re.search(r"\bfor\s*\(\s*(?:int|size_t|auto|long)?\s*\w+\s*=", code):
+            scores["cpp"] += 4
+        if re.search(r"\b(using\s+namespace\s+std|#define)\b", code):
+            scores["cpp"] += 4
+        if re.search(r"->\s*[a-zA-Z_]", code) and "=>" not in code:
+            scores["cpp"] += 3
+        if re.search(r"\b(template\s*<|std::vector|std::string)\b", code):
+            scores["cpp"] += 4
 
         # JavaScript patterns
         if re.search(r"\b(const|let|var)\s+[a-zA-Z_$]", code):
@@ -281,14 +302,20 @@ class OcrService:
         if re.search(r"\b(package\s+[a-z.]+|implements\s+[A-Z]|extends\s+[A-Z])", code):
             scores["java"] += 3
 
+        # If user explicitly hinted a language, give it significant priority
         if hint and hint in scores:
-            scores[hint] += 2
+            scores[hint] += 4
 
         best_lang = max(scores, key=lambda k: scores[k])
         best_score = scores[best_lang]
 
         if best_score == 0:
-            return (hint or "python", 0.5)
+            if hint and hint in scores:
+                return (hint, 0.7)
+            # Check for C-style syntax (braces and semicolons) vs Python indentation
+            if (";" in code or "{" in code) and not re.search(r":\s*$", code, re.MULTILINE):
+                return ("cpp", 0.6)
+            return ("python", 0.5)
 
         confidence = round(min(0.98, max(0.5, 0.5 + (best_score * 0.05))), 2)
         return (best_lang, confidence)

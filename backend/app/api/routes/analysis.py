@@ -28,5 +28,5 @@ async def analyze_code(
         question=payload.question,
         finding=finding,
     )
-    return AnalyzeResponse(session_id=item.id, **finding.model_dump())
+    return AnalyzeResponse(session_id=item.id, language=item.language, **finding.model_dump())
 

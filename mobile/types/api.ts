@@ -10,6 +10,7 @@ export interface AnalyzeRequest {
 
 export interface AnalysisResponse {
   session_id: string;
+  language: Language;
   summary: string;
   severity: Severity;
   root_cause: string;

@@ -31,16 +31,54 @@ export default function AnalysisScreen() {
 
   if (error) return <Screen><ErrorPanel message={error} /><Button label="Back to dashboard" onPress={() => router.replace("/")} /></Screen>;
   if (!session) return <Screen><LoadingState label="Loading structured analysis…" /></Screen>;
-  const applyFix = () => { updateDraft({ language: session.language, code: session.corrected_code, errorMessage: session.error_message, question: session.question }); router.replace("/new-session"); };
-  const runFix = () => { updateDraft({ language: session.language, code: session.corrected_code, errorMessage: session.error_message, question: session.question }); router.push({ pathname: "/execution", params: { autoRun: "true", sessionId: session.id } }); };
+  const applyFix = () => {
+    updateDraft({
+      language: session.language,
+      code: session.corrected_code,
+      originalCode: session.code,
+      correctedCode: session.corrected_code,
+      isExplicitLanguage: true,
+      errorMessage: session.error_message,
+      question: session.question,
+    });
+    router.replace("/new-session");
+  };
+  const runFix = () => {
+    updateDraft({
+      language: session.language,
+      code: session.corrected_code,
+      originalCode: session.code,
+      correctedCode: session.corrected_code,
+      isExplicitLanguage: true,
+      errorMessage: session.error_message,
+      question: session.question,
+    });
+    router.push({ pathname: "/execution", params: { autoRun: "true", sessionId: session.id } });
+  };
 
   const handleApplyCopilotCode = (newCode: string) => {
-    updateDraft({ language: session.language, code: newCode, errorMessage: session.error_message, question: session.question });
+    updateDraft({
+      language: session.language,
+      code: newCode,
+      originalCode: session.code,
+      correctedCode: newCode,
+      isExplicitLanguage: true,
+      errorMessage: session.error_message,
+      question: session.question,
+    });
     router.push("/new-session");
   };
 
   const handleTestCopilotCode = (newCode: string) => {
-    updateDraft({ language: session.language, code: newCode, errorMessage: session.error_message, question: session.question });
+    updateDraft({
+      language: session.language,
+      code: newCode,
+      originalCode: session.code,
+      correctedCode: newCode,
+      isExplicitLanguage: true,
+      errorMessage: session.error_message,
+      question: session.question,
+    });
     router.push({ pathname: "/execution", params: { autoRun: "true", sessionId: session.id } });
   };
 
@@ -50,7 +88,7 @@ export default function AnalysisScreen() {
     <Card><Section title="ROOT CAUSE" body={session.root_cause} /><Section title="EXPLANATION" body={session.explanation} />{session.affected_lines.length ? <Section title="AFFECTED LINES" body={session.affected_lines.map((line) => `Line ${line}`).join(", ")} /> : null}<Section title="CONFIDENCE" body={`${Math.round(session.confidence * 100)}% — this is a likely diagnosis, not proof of every program behavior.`} /></Card>
     <Card><FixPanel fix={session.suggested_fix} code={session.corrected_code} /></Card>
     <Card><Text style={styles.sectionTitle}>DEBUGGING STEPS</Text>{session.debugging_steps.map((step, index) => <Text key={step} style={styles.step}>{index + 1}. {step}</Text>)}</Card>
-    <Button label="Apply Suggested Fix" onPress={applyFix} /><Button label="Run Fixed Code" onPress={runFix} tone="secondary" /><Button label="Copy Fix" onPress={() => void Clipboard.setStringAsync(session.corrected_code)} tone="secondary" /><Button label="New Analysis" onPress={() => router.replace("/new-session")} tone="secondary" />
+    <Button label="Paste Fixed Code" accessibilityLabel="Paste Fixed Code" onPress={applyFix} /><Button label="Run Fixed Code" onPress={runFix} tone="secondary" /><Button label="Copy Fix" onPress={() => void Clipboard.setStringAsync(session.corrected_code)} tone="secondary" /><Button label="New Analysis" onPress={() => router.replace("/new-session")} tone="secondary" />
     
     <AgentCopilot
       code={session.code}

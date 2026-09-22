@@ -14,9 +14,9 @@ class Settings(BaseSettings):
 
     app_env: str = "development"
     database_url: str = "sqlite:///./devlens.db"
-    llm_provider: str = "rule_based"
+    llm_provider: str = "auto"
     ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = ""
+    ollama_model: str = "qwen2.5-coder:3b"
     allowed_origins: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: [
             "http://localhost:3000",
@@ -43,9 +43,9 @@ class Settings(BaseSettings):
     @classmethod
     def validate_provider(cls, value: str) -> str:
         normalized = value.lower().strip()
-        if normalized not in {"rule_based", "ollama"}:
-            return "rule_based"
-        return normalized
+        if normalized in {"auto", "ollama", "rule_based"}:
+            return normalized
+        return "auto"
 
 
 @lru_cache

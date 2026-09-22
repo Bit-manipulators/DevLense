@@ -41,17 +41,24 @@ export function getCustomApiUrl(): string | null {
   return customApiUrl;
 }
 
-// Dynamically resolve API URL: supports custom URL, browser hostname, env variable, or Render Cloud default
+// Dynamically resolve API URL: supports custom URL, env variable, browser hostname, or Render Cloud default
 export function getApiUrl(): string {
   if (customApiUrl) {
     return customApiUrl;
   }
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL.replace(/\/$/, "");
+  }
   if (typeof window !== "undefined" && window.location?.hostname) {
-    if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+      return "http://127.0.0.1:8001";
+    }
+    // If accessed via local network IP (e.g., 192.168.x.x:8081 or 10.x.x.x:8081)
+    if (!window.location.hostname.includes(".onrender.com") && !window.location.hostname.includes("devlens")) {
       return `http://${window.location.hostname}:8001`;
     }
   }
-  return (process.env.EXPO_PUBLIC_API_URL || DEFAULT_CLOUD_API_URL).replace(/\/$/, "");
+  return DEFAULT_CLOUD_API_URL.replace(/\/$/, "");
 }
 
 export async function testApiUrl(candidateUrl: string): Promise<HealthResponse> {

@@ -27,7 +27,7 @@ export default function ExecutionScreen() {
   useEffect(() => { if (autoRun === "true") void run(); }, []); // user explicitly pressed Run Code before navigation
 
   return <Screen>
-    <Text style={styles.intro}>Code is sent only to the Docker sandbox. The backend never executes it directly on the host.</Text>
+    <Text style={styles.intro}>Code is executed inside a secure isolated sandbox with strict resource limits and execution timeouts.</Text>
     {loading ? <LoadingState label="Running in isolated sandbox…" /> : null}<ErrorPanel message={error} />
     {result ? <Card><View style={styles.row}><Text style={styles.status}>{result.success ? "EXECUTION SUCCEEDED" : "EXECUTION FAILED"}</Text><Text style={styles.meta}>exit {result.exit_code} · {result.execution_time_ms} ms</Text></View>{result.stdout ? <Output label="STDOUT" content={result.stdout} /> : null}{result.stderr ? <Output label="STDERR / COMPILER OUTPUT" content={result.stderr} error /> : null}</Card> : null}
     <Button label={result ? "Run Again" : "Run in Sandbox"} loading={loading} onPress={run} /><Button label="Back to Editor" onPress={() => router.replace("/new-session")} tone="secondary" />

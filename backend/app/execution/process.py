@@ -63,7 +63,7 @@ class ProcessExecutionService(ExecutionService):
             raise ExecutionUnavailable(f"Execution is not supported for {language}.")
 
         filename = filenames[language]
-        with tempfile.TemporaryDirectory(prefix="devlens-proc-") as temp_dir:
+        with tempfile.TemporaryDirectory(prefix="devlens-proc-", ignore_cleanup_errors=True) as temp_dir:
             workspace = Path(temp_dir)
             source_file = workspace / filename
             source_file.write_text(code, encoding="utf-8")

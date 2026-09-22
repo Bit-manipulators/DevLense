@@ -41,3 +41,53 @@ def test_rate_limiter_stale_cleanup():
     assert "1.1.1.1" not in limiter._hits
     assert "2.2.2.2" in limiter._hits
 
+
+@pytest.mark.asyncio
+async def test_cpp_loop_bound_analysis_and_correction():
+    analyzer = RuleBasedAnalyzer()
+    cpp_code = "for(int i = 0; i <= n; i++)"
+    finding = await analyzer.analyze("cpp", cpp_code)
+
+    assert "Python" not in finding.summary
+    assert "syntax error" not in finding.summary.lower()
+    assert "loop" in finding.summary.lower()
+    assert "i < n" in finding.corrected_code
+    assert finding.corrected_code == "for(int i = 0; i < n; i++)"
+
+
+@pytest.mark.asyncio
+async def test_cpp_alias_normalization_and_routing():
+    from app.analyzers.factory import AnalyzerFactory
+
+    cpp_analyzer = AnalyzerFactory.get_language_analyzer("c++")
+    assert cpp_analyzer.__class__.__name__ == "CppAnalyzer"
+
+    cpp_upper = AnalyzerFactory.get_language_analyzer("CPP")
+    assert cpp_upper.__class__.__name__ == "CppAnalyzer"
+
+    js_analyzer = AnalyzerFactory.get_language_analyzer("js")
+    assert js_analyzer.__class__.__name__ == "JavaScriptAnalyzer"
+
+
+@pytest.mark.asyncio
+async def test_all_languages_routing_and_no_cross_contamination():
+    analyzer = RuleBasedAnalyzer()
+
+    # 1. Python
+    py_res = await analyzer.analyze("python", "def test():\n    return 42")
+    assert "python" in py_res.root_cause.lower() or py_res.summary != ""
+
+    # 2. C++
+    cpp_res = await analyzer.analyze("cpp", "for(int i = 0; i <= n; i++)")
+    assert "Python" not in cpp_res.summary
+    assert "i < n" in cpp_res.corrected_code
+
+    # 3. JavaScript
+    js_res = await analyzer.analyze("javascript", "const x = null; console.log(x.y);")
+    assert "optional chaining" in js_res.suggested_fix
+
+    # 4. Java
+    java_res = await analyzer.analyze("java", "for (int i = 0; i <= max; i++)")
+    assert "i < max" in java_res.corrected_code
+
+
