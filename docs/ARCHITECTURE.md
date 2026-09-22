@@ -104,46 +104,50 @@ flowchart TB
 
 ## 3. Subsystem Breakdown
 
-### 3.1 Client & Presentation Layer ([`mobile/`](file:///home/amit/github/DevLense/mobile))
+### 3.1 Client & Presentation Layer ([`mobile/`](../mobile))
 * **Framework:** React Native built with Expo (Expo Router v3).
 * **Cross-Platform Target:** Android native (APK), iOS (via Expo Go), and Desktop Web (`http://localhost:8081`).
 * **Key Components:**
-  * [`CodeEditor.tsx`](file:///home/amit/github/DevLense/mobile/components/CodeEditor.tsx): Custom synchronized line-numbered editor with visual error gutter indicators and real-time cursor syncing.
-  * [`CameraScanModal.tsx`](file:///home/amit/github/DevLense/mobile/components/CameraScanModal.tsx): Interactive preview modal showing extracted code, confidence scoring, and one-tap language selection.
-  * [`AgentCopilot.tsx`](file:///home/amit/github/DevLense/mobile/components/AgentCopilot.tsx): Conversational assistant offering algorithmic optimization, test synthesis, and code repairs.
-  * [`ErrorPanel.tsx`](file:///home/amit/github/DevLense/mobile/components/ErrorPanel.tsx) & [`FixPanel.tsx`](file:///home/amit/github/DevLense/mobile/components/FixPanel.tsx): Severity badges and one-tap diff application widgets.
+  * [`CodeEditor.tsx`](../mobile/components/CodeEditor.tsx): Custom synchronized line-numbered editor with visual error gutter indicators and real-time cursor syncing.
+  * [`CameraScanModal.tsx`](../mobile/components/CameraScanModal.tsx): Interactive preview modal showing extracted code, confidence scoring, and one-tap language selection.
+  * [`AgentCopilot.tsx`](../mobile/components/AgentCopilot.tsx): Conversational assistant offering algorithmic optimization, test synthesis, and code repairs.
+  * [`ErrorPanel.tsx`](../mobile/components/ErrorPanel.tsx) & [`FixPanel.tsx`](../mobile/components/FixPanel.tsx): Severity badges and one-tap diff application widgets.
 
-### 3.2 API Gateway & Security Perimeter ([`backend/app/api/`](file:///home/amit/github/DevLense/backend/app/api))
+### 3.2 API Gateway & Security Perimeter ([`backend/app/api/`](../backend/app/api))
 * **Framework:** FastAPI running on Uvicorn with asynchronous event loops.
 * **Security Middleware:** Injects standard browser defense headers (`nosniff`, `frame-ancestors 'none'`, `no-store`).
 * **Rate Limiting:** Token-bucket algorithm per client IP address.
 * **Validation:** Strict Pydantic v2 schemas validating request sizes and input sanitization before reaching core logic.
 
-### 3.3 Static Diagnostics & AI Engine ([`backend/app/analysis/`](file:///home/amit/github/DevLense/backend/app/analysis))
-* **Extensible Provider Architecture:** Implements `AnalyzerProvider` interface.
-* **Deterministic Rule Analyzers:** Language-specific abstract syntax tree (AST) and heuristic pattern matchers for:
-  * **Python:** Division by zero, unhandled index errors, recursive infinite loops, undefined variables.
-  * **JavaScript:** Strict equality bugs, async/await missing patterns, prototype errors.
-  * **C++:** Buffer overflows, off-by-one errors, memory leaks, dangling pointers.
-  * **Java:** NullPointerException patterns, array bound violations, resource leaks.
-* **AI Provider Fallback:** Connects to local Ollama instances when available; falls back to rule-based engine if Ollama is unresponsive.
+### 3.3 Evidence-Driven Debug Engine & Static Diagnostics ([`backend/app/orchestrator/`](../backend/app/orchestrator) & [`backend/app/analysis/`](../backend/app/analysis))
+* **Master Orchestrator:** `EvidenceDebugOrchestrator` coordinates the 10-phase debugging pipeline: problem ingestion, multi-layer diagnostics, dynamic test synthesis, sandbox execution, root cause reasoning, patch synthesis, regression validation, and diff packaging.
+* **Multi-Layer Static Diagnostics:**
+  * **Syntax:** AST parser-backed verification across Python, JavaScript, C++, and Java.
+  * **Semantics:** Variable scoping, undefined bindings, type mismatches, and null/None dereferencing.
+  * **Edge Cases:** Zero-division, unhandled empty collections, off-by-one boundary conditions.
+  * **Complexity:** Cyclomatic complexity and heuristic Big-O runtime/space estimation.
+* **Deterministic Rule Analyzers:** Backward-compatible AST rule parsers for fast sub-millisecond responses.
+* **AI Provider Fallback:** Connects to local Ollama instances when available; seamlessly falls back to deterministic rule engines if Ollama is unreachable.
 
-### 3.4 Zero-Trust Execution Sandbox ([`backend/app/execution/`](file:///home/amit/github/DevLense/backend/app/execution))
-* **Daemon Isolation:** Code is written to a transient directory mounted into an ephemeral container.
-* **Hardened Security Matrix:**
+### 3.4 Two-Tier Hybrid Execution Sandbox ([`backend/app/execution/`](../backend/app/execution))
+* **Hybrid Execution Manager (`HybridExecutionManager`):** Intelligently routes code execution between Docker micro-containers and OS Process Jail.
+* **Tier 1: Docker Micro-Containers (`DockerExecutionService`):**
   * `--network none`: Total network isolation.
   * `--read-only`: Read-only root filesystem.
   * `--cap-drop ALL`: Linux capabilities stripped.
   * `--security-opt no-new-privs`: Prevents privilege escalation.
   * Resource Caps: 256MB RAM, 0.5 CPU, 64 max PIDs, 5-second hard execution timeout.
   * Automatic Garbage Collection: Prunes orphan and timed-out containers immediately.
+* **Tier 2: Cloud Process Jail Fallback (`ProcessJailExecutionService`):**
+  * Invoked automatically when Docker daemon is not present (e.g. Render, lightweight cloud runners, local environments without Docker).
+  * Enforces ephemeral isolated temp directory execution, stripped environment variables, strict timeouts, and memory quotas.
 
-### 3.5 In-Memory OCR Pipeline ([`backend/app/services/ocr_service.py`](file:///home/amit/github/DevLense/backend/app/services/ocr_service.py))
+### 3.5 In-Memory OCR Pipeline ([`backend/app/services/ocr_service.py`](../backend/app/services/ocr_service.py))
 * **Processing:** Streams image bytes through PIL without saving files to host disk.
 * **Engine:** Tesseract OCR (with custom config tuned for monospace code) + Ollama Vision fallback.
 * **Confidence & Normalization:** Calculates character confidence, normalizes indentation, removes visual artifacts, and auto-detects target programming language.
 
-### 3.6 Persistence & Data Models ([`backend/app/models/`](file:///home/amit/github/DevLense/backend/app/models))
+### 3.6 Persistence & Data Models ([`backend/app/models/`](../backend/app/models))
 * **ORM:** SQLAlchemy 2.0 declarative models with async query capabilities.
 * **Optimization:** Utilizes `selectinload` eager loading on relationships to prevent $N+1$ query degradation.
 * **Storage:** SQLite 3 for local single-user instances, ready for PostgreSQL migration in distributed environments.

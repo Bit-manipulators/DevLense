@@ -195,23 +195,44 @@ Executes an iterative, multi-stage debugging pipeline (Problem Ingestion $\to$ S
   "session_id": "8f394c20-d092-416b-9c71-f925f46bb71b",
   "status": "fixed",
   "language": "python",
-  "root_cause": "Identical index pairing and $O(N^2)$ time complexity",
-  "failure_type": "logical_error",
-  "evidence": "Inner loop allows using the same element twice (i == j).",
-  "suggested_code": "def twoSum(nums, target):\n    lookup = {}\n    for i, num in enumerate(nums):\n        complement = target - num\n        if complement in lookup:\n            return [lookup[complement], i]\n        lookup[num] = i\n    return []\n",
+  "problem_summary": "Two Sum (Array Archetype)",
+  "root_cause": "Identical index pairing and O(N^2) brute-force nested loop",
+  "failure_type": "wrong_answer",
+  "evidence": [
+    {
+      "test_case": "nums=[3,2,4], target=6",
+      "expected": "[1, 2]",
+      "actual": "[0, 0]",
+      "category": "logic_failure"
+    }
+  ],
+  "original_code": "def twoSum(nums, target):\n    for i in range(len(nums)):\n        for j in range(len(nums)):\n            if nums[i] + nums[j] == target:\n                return [i, j]\n",
+  "corrected_code": "def twoSum(nums, target):\n    lookup = {}\n    for i, num in enumerate(nums):\n        complement = target - num\n        if complement in lookup:\n            return [lookup[complement], i]\n        lookup[num] = i\n    return []\n",
   "diff": "--- Original\n+++ Repaired\n@@ -1,5 +1,7 @@\n def twoSum(nums, target):\n-    for i in range(len(nums)):\n-        for j in range(len(nums)):\n-            if nums[i] + nums[j] == target:\n-                return [i, j]\n+    lookup = {}\n+    for i, num in enumerate(nums):\n+        complement = target - num\n+        if complement in lookup:\n+            return [lookup[complement], i]\n+        lookup[num] = i\n+    return []\n",
   "affected_lines": [2, 3, 4, 5],
-  "iterations": 1,
-  "complexity": {
-    "time": "O(N)",
-    "space": "O(N)",
-    "notes": "Single pass hash table lookup"
-  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "diagnosis": "Inner loop compares index with itself and violates distinct element constraint.",
+      "suggested_fix": "Use a hash map complement lookup in a single pass.",
+      "diff": "...",
+      "tests_passed": 2,
+      "tests_failed": 0,
+      "validated": true
+    }
+  ],
+  "tests_run": 2,
+  "tests_passed": 2,
+  "tests_failed": 0,
   "validation": {
-    "compiled": true,
-    "runtime_ok": true,
-    "tests_passed": 2,
-    "tests_total": 2
+    "compile": true,
+    "runtime": true,
+    "tests": true
+  },
+  "complexity": {
+    "time_complexity": "O(N)",
+    "space_complexity": "O(N)",
+    "explanation": "Single-pass hash table lookup achieves optimal linear time complexity."
   }
 }
 ```

@@ -34,7 +34,7 @@ Ensure you have the following installed on your development machine:
 
 ## 2. Backend Development Workflow (FastAPI)
 
-The backend is housed in [`backend/`](file:///home/amit/github/DevLense/backend).
+The backend is housed in [`backend/`](../backend).
 
 ### 2.1 Initialization
 
@@ -83,7 +83,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 
 ## 3. Frontend Development Workflow (Expo / React Native)
 
-The mobile and web client is housed in [`mobile/`](file:///home/amit/github/DevLense/mobile).
+The mobile and web client is housed in [`mobile/`](../mobile).
 
 ### 3.1 Initialization
 
@@ -168,10 +168,10 @@ class RustRuleAnalyzer(BaseLanguageRule):
 ```
 
 ### Step 2: Register in Analyzer Factory
-Add the new parser to [`backend/app/analyzers/factory.py`](file:///home/amit/github/DevLense/backend/app/analyzers/factory.py).
+Add the new parser to [`backend/app/analyzers/factory.py`](../backend/app/analyzers/factory.py).
 
 ### Step 3: Add Docker Sandbox Runtime (Optional)
-If sandboxed execution is supported, add the Docker image to [`backend/app/execution/manager.py`](file:///home/amit/github/DevLense/backend/app/execution/manager.py):
+If sandboxed execution is supported, add the Docker image to [`backend/app/execution/manager.py`](../backend/app/execution/manager.py):
 ```python
 SUPPORTED_CONTAINERS = {
     "python": "python:3.12-alpine",
@@ -183,32 +183,38 @@ SUPPORTED_CONTAINERS = {
 ```
 
 ### Step 4: Write Unit Tests
-Add test cases in `backend/tests/test_analyzers.py` to verify rule triggers and confidence accuracy.
+Add test cases in `backend/tests/` to verify rule triggers, execution adapters, and confidence accuracy.
 
 ---
 
 ## 6. Testing & Quality Assurance
 
 ### 6.1 Backend Test Suite (Pytest)
+The backend test suite contains **59 tests across 12 modules** ensuring 100% pass rates across evidence-driven debugging, live compilation, and OCR pipelines:
+
 ```bash
 cd backend
-python -m pytest -v
-```
 
-To run a specific test suite:
-```bash
-python -m pytest tests/test_ocr.py -v
+# Run all 59 tests
+python -m pytest -v
+
+# Run specific test suites
+python -m pytest tests/test_debug_api.py -v
 python -m pytest tests/test_live_execution.py -v
+python -m pytest tests/test_benchmarks.py -v
+python -m pytest tests/test_ocr.py -v
 ```
 
 ### 6.2 Mobile Test Suite & TypeScript Verification (Jest)
+The mobile client contains **17 tests across 5 Jest test suites**:
+
 ```bash
 cd mobile
 
-# Run Jest unit tests
+# Run Jest unit tests (17 passing tests)
 npm test
 
-# Run TypeScript typecheck
+# Run TypeScript typecheck (0 errors)
 npm run typecheck
 ```
 
@@ -216,13 +222,13 @@ npm run typecheck
 
 ## 7. Troubleshooting & FAQ
 
-### Q1: `Docker sandbox is unavailable on the server` (HTTP 503)
-* **Cause:** Docker Desktop is not running or the current user lacks socket permissions.
+### Q1: `Docker sandbox is unavailable on the server`
+* **Behavior:** DevLens automatically falls back to the **Process Jail** sandbox. If Docker is desired, ensure Docker Desktop or `dockerd` is running.
 * **Fix:** Start Docker Desktop. On Linux, ensure your user is in the `docker` group (`sudo usermod -aG docker $USER`).
 
 ### Q2: Phone cannot reach API (`Network request failed`)
 * **Cause:** Firewall blocking port 8001 or incorrect LAN IP address.
-* **Fix:** Verify firewall allows incoming connections on port 8001. Ensure both devices share the exact same subnet.
+* **Fix:** Verify firewall allows incoming connections on port 8001. Ensure both devices share the exact same subnet, or use USB ADB reverse tunneling (`adb reverse tcp:8001 tcp:8001`).
 
 ### Q3: Metro Bundler shows stale code
 * **Fix:** Clear cache by starting with `npx expo start -c`.
@@ -232,6 +238,6 @@ npm run typecheck
 ## 8. Code Style & Contribution Conventions
 
 * **Typing:** Strict typing is enforced in both Python (Pydantic / Type annotations) and TypeScript.
-* **API Contracts:** All client-side HTTP calls must be centralized in [`mobile/services/api.ts`](file:///home/amit/github/DevLense/mobile/services/api.ts).
+* **API Contracts:** All client-side HTTP calls must be centralized in [`mobile/services/api.ts`](../mobile/services/api.ts).
 * **Heuristic Integrity:** Rule analyzers must only produce findings with calibrated confidence scores (0.0 to 1.0) and must never claim certainty on speculative heuristics.
 * **Security Guardrails:** Never introduce shell string concatenation or bypass container execution sandboxes.

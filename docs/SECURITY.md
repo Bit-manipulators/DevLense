@@ -19,10 +19,11 @@
 
 ## 1. Security Philosophy & Threat Stance
 
-DevLens accepts arbitrary, potentially untrusted, and malicious source code from end users. The core security principle is **Zero Host-Code Execution**:
+DevLens accepts arbitrary, potentially untrusted, and malicious source code from end users. The core security architecture employs a **Two-Tier Hybrid Sandboxing** model:
 
-> ⚠️ **Zero Host Execution Guarantee:**  
-> The backend application process **never** evaluates, compiles, or runs submitted code directly on the host operating system. If the Docker sandbox engine is unavailable, code execution is explicitly refused with HTTP 503 rather than degrading to an unsafe host fallback.
+> 🛡️ **Isolation Guarantees:**  
+> * **Tier 1 (Production / Full Isolation):** Untrusted code executes inside ephemeral Docker micro-containers with zero network access, read-only root filesystems, stripped Linux capabilities, and strict cgroups memory/CPU throttling.
+> * **Tier 2 (Cloud / Serverless Fallback):** When running in restricted cloud environments without a Docker daemon (e.g. Render, AWS App Runner, or local environments without Docker Desktop), `HybridExecutionManager` transparently falls back to `ProcessJailExecutionService`—enforcing sub-second OS-level subprocess sandboxing, isolated ephemeral temp directories, stripped environment variables, and strict memory/timeout watchdogs.
 
 ---
 
@@ -34,8 +35,8 @@ Every code execution is isolated within an ephemeral micro-container adhering to
 flowchart TD
     subgraph Host["🖥️ Host Machine"]
         FastAPI["FastAPI App (Untrusted Code Ingestion)"]
-        DockerAPI["Docker Daemon via Socket"]
-        FastAPI --> DockerAPI
+        ExecutionMgr["HybridExecutionManager"]
+        FastAPI --> ExecutionMgr
     end
 
     subgraph ContainerSandbox["🛡️ Ephemeral Micro-Container"]

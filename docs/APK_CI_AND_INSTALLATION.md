@@ -47,7 +47,8 @@ flowchart LR
 
 1. Open Chrome, Brave, or Firefox on your Android device.
 2. Navigate to your repository releases page:  
-   👉 `https://github.com/Bit-manipulators/DevLense/releases`
+   👉 Upstream: `https://github.com/Bit-manipulators/DevLense/releases`  
+   👉 Fork: `https://github.com/Myparadox-creator/DevLense/releases`  
 3. Tap the latest release and download **`devlens-v0.1.0.apk`**.
 4. Once downloaded, tap the notification or open your **Downloads** folder to install.
 5. **If Android displays security prompts:**

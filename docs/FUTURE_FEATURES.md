@@ -20,8 +20,11 @@
 
 DevLens has successfully shipped the following core capabilities:
 
-- [x] **Zero-Trust Docker Sandbox:** Ephemeral, isolated, resource-capped container execution across Python, JavaScript, C++, and Java.
-- [x] **Multi-Language Heuristic Diagnostics:** Instant AST and pattern-based rule analyzer with calibrated confidence scoring.
+- [x] **Evidence-Driven Debugging Engine (`POST /api/v1/debug`):** 10-phase pipeline orchestrating problem archetype classification, multi-layer diagnostics, dynamic test synthesis, root cause reasoning, patch synthesis, and regression validation.
+- [x] **Two-Tier Hybrid Sandboxing:** Ephemeral container execution with Docker micro-containers (Tier 1) and automatic Cloud Process Jail fallback (Tier 2).
+- [x] **Dynamic Test Case Generation & Validation:** Synthesizes edge-case inputs, executes tests against sandboxed runtimes, and enforces zero-regression patch guarantees.
+- [x] **Multi-Language Coverage:** Full AST analysis, compilation, and repair across **Python, JavaScript, C++, and Java**.
+- [x] **Canonical Benchmark Suite:** Standardized algorithmic test suites across all 4 supported languages.
 - [x] **Camera & Gallery OCR Code Capture:** In-memory stream OCR with monospace character filtering, confidence review modal, and language auto-detection.
 - [x] **Interactive AI Copilot Agent:** Conversational reasoning, algorithmic optimization, and one-tap code repairs with local Ollama LLM and heuristic fallbacks.
 - [x] **Automated Android CI Pipeline:** GitHub Actions automated APK builds and physical device installation scripts.

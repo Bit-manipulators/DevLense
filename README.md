@@ -82,12 +82,14 @@ flowchart TD
 
     subgraph Gateway["⚡ API Gateway (FastAPI 0.115+)"]
         Router["CORS & Token-Bucket Rate Limiter"]
+        DebugAPI["POST /api/v1/debug"]
         AnalyzeAPI["POST /api/v1/analyze"]
         ExecuteAPI["POST /api/v1/execute"]
         OcrAPI["POST /api/v1/ocr"]
         AgentAPI["POST /api/v1/agent/chat"]
         SessionsAPI["/api/v1/sessions"]
         HealthAPI["GET /api/v1/health"]
+        Router --> DebugAPI
         Router --> AnalyzeAPI
         Router --> ExecuteAPI
         Router --> OcrAPI
@@ -96,35 +98,38 @@ flowchart TD
         Router --> HealthAPI
     end
 
-    subgraph Core["🧠 Core Engine & Services"]
-        Engine["Multi-Language Rule Parsers (Python, JS, C++, Java)"]
+    subgraph Core["🧠 Core Engine & Evidence Pipeline"]
+        Orchestrator["EvidenceDebugOrchestrator (10-Phase Pipeline)"]
+        MultiAnalyzer["MultiLayerAnalyzer & Static Rules"]
+        TestEngine["Dynamic Test Generator & Extractor"]
+        ReasoningRepair["RootCauseEngine & PatchSynthesizer"]
+        OcrSvc["OcrService (In-Memory Processing)"]
         OllamaEngine["Ollama LLM Provider (Optional Local Fallback)"]
-        OCR["OcrService (In-Memory Processing)"]
-        DebugPipeline["Evidence-Driven DebugEngine"]
-        Engine --> DebugPipeline
+        
+        Orchestrator --> MultiAnalyzer
+        Orchestrator --> TestEngine
+        Orchestrator --> ReasoningRepair
     end
 
-    subgraph Sandbox["🛡️ Isolated Sandbox (Docker)"]
-        DockerDaemon["Docker Daemon"]
-        PyBox["🐍 python:3.12-alpine"]
-        NodeBox["⚡ node:20-alpine"]
-        CppBox["⚙️ gcc:14.2.0"]
-        JavaBox["☕ eclipse-temurin:21-alpine"]
-        DockerDaemon --> PyBox
-        DockerDaemon --> NodeBox
-        DockerDaemon --> CppBox
-        DockerDaemon --> JavaBox
+    subgraph Sandbox["🛡️ Two-Tier Execution Sandbox"]
+        ExecutionMgr["HybridExecutionManager"]
+        DockerDaemon["Docker Daemon (Micro-Containers)"]
+        ProcessJail["Process Jail (Cloud / Host Subprocess Jail)"]
+        ExecutionMgr -->|Tier 1: Docker| DockerDaemon
+        ExecutionMgr -->|Tier 2: Fallback| ProcessJail
     end
 
     subgraph DB["💾 Persistence"]
-        SQLite[(SQLite / SQLAlchemy 2.0)]
+        SQLite[(SQLite / SQLAlchemy 2.0 with selectinload)]
     end
 
     Client -- "REST / JSON (Port 8001)" --> Gateway
-    AnalyzeAPI --> Core --> DB
-    ExecuteAPI --> DockerDaemon --> DB
-    OcrAPI --> OCR
-    AgentAPI --> Core
+    DebugAPI --> Orchestrator --> Sandbox
+    Orchestrator --> DB
+    AnalyzeAPI --> MultiAnalyzer --> DB
+    ExecuteAPI --> ExecutionMgr --> DB
+    OcrAPI --> OcrSvc
+    AgentAPI --> OllamaEngine
     SessionsAPI --> DB
 ```
 
@@ -136,21 +141,30 @@ flowchart TD
 devlens/
 ├── 🐍 backend/                      # FastAPI Python Application
 │   ├── app/
-│   │   ├── api/routes/              # REST controllers (analyze, execute, ocr, sessions, agent)
-│   │   ├── analysis/                # Core diagnostic pipeline & rule engines
-│   │   ├── analyzers/               # Language AST & heuristic analyzers (Python, JS, C++, Java)
-│   │   ├── execution/               # Docker container sandboxing manager
+│   │   ├── api/routes/              # REST controllers (debug, analyze, execute, ocr, sessions, agent)
+│   │   ├── context/                 # Problem archetype & constraint ingestion
+│   │   ├── analysis/                # Multi-layer static diagnostics (syntax, semantic, edge, complexity)
+│   │   ├── languages/               # Adapters for Python, JavaScript, C++, Java
+│   │   ├── testing/                 # Dynamic test case synthesis & extraction
+│   │   ├── execution/               # Two-tier sandboxing (Docker + Cloud Process Jail)
+│   │   ├── reasoning/               # Root cause isolation & hypothesis ranking
+│   │   ├── repair/                  # Patch synthesizer, AST transforms & diff generator
+│   │   ├── validation/              # Regression detector & test validation
+│   │   ├── orchestrator/            # 10-phase EvidenceDebugOrchestrator
+│   │   ├── benchmarks/              # Canonical LeetCode benchmark suite
+│   │   ├── analyzers/               # Rule-based analyzers (backward compatibility)
 │   │   ├── models/                  # SQLAlchemy 2.0 ORM schemas
 │   │   ├── schemas/                 # Pydantic v2 DTO request/response models
-│   │   ├── services/                # OCR, session, and debugging services
+│   │   ├── services/                # OCR, session, and analysis services
 │   │   └── utils/                   # Rate limiting, logger, and security helpers
-│   ├── tests/                       # Pytest test suite (13 test modules)
+│   ├── tests/                       # Pytest test suite (59 tests across 12 modules)
 │   └── requirements.txt             # Python dependencies
 ├── 📱 mobile/                       # React Native / Expo Application
 │   ├── app/                         # Expo Router screens (index, new-session, history, settings)
 │   ├── components/                  # CodeEditor, CameraScanModal, AgentCopilot, ErrorPanel
 │   ├── hooks/                       # Custom network, session, and state hooks
-│   ├── services/                    # Typed API client with 204 safe-deletion
+│   ├── services/                    # Typed API client with debugSession & 204 safe-deletion
+│   ├── __tests__/                   # Jest test suites (17 tests across 5 modules)
 │   └── package.json                 # Node dependencies & Expo config
 ├── 📚 docs/                         # In-depth architectural & developer documentation
 │   ├── API.md                       # Comprehensive API specification & schemas
@@ -274,12 +288,15 @@ DevLens includes an automated GitHub Actions CI pipeline that builds a standalon
 
 Comprehensive test suites ensure backend and mobile stability:
 
+* **Backend Suite:** **59/59 tests passing** across 12 modules covering the 10-phase debug orchestrator, multi-language live compilation, canonical benchmarks, repair synthesizer, OCR, API routes, and AST analyzers.
+* **Mobile Suite:** **17/17 tests passing** across 5 Jest suites with **0 TypeScript errors** (`tsc --noEmit`).
+
 ```bash
-# 1. Run backend unit & integration tests
+# 1. Run backend test suite (59 passing tests)
 cd backend
 python -m pytest -v
 
-# 2. Run mobile unit tests and TypeScript check
+# 2. Run mobile unit tests & TypeScript verification (17 passing tests)
 cd ../mobile
 npm test
 npm run typecheck
